@@ -1,0 +1,7 @@
+dwm/config.h
+dwm/config.def.h
+dwm/dwm
+dwm/util.o
+dwm/drw.o
+slstatus/config.h
+dwm/dwm.o
