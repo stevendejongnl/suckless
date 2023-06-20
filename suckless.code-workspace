@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "/home/stevendejong/.dwm"
+		},
+		{
+			"path": "/home/stevendejong/.config/X11"
+		},
+		{
+			"path": "/home/stevendejong/.logs"
+		}
+	],
+	"settings": {}
+}

@@ -3,5 +3,10 @@ dwm/config.def.h
 dwm/dwm
 dwm/util.o
 dwm/drw.o
-slstatus/config.h
 dwm/dwm.o
+
+slstatus/config.h
+slstatus/slstatus
+slstatus/slstatus.o
+slstatus/util.o
+slstatus/components
