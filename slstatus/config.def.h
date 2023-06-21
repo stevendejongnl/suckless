@@ -69,7 +69,8 @@ static const struct arg args[] = {
 	{ cpu_perc, "  %s% | ",           NULL },
 	{ ram_used, " %s | ",					 NULL },
 	{ battery_combined, "%s",					"BAT0" },
-	{ run_command, "%s | ",     	  	".dwm/package-updates.sh" },
+	{ run_command, "%s",     	  	    ".dwm/package-updates.sh" },
+	{ run_command, "%s",     	      	".dwm/pipewire.sh" },
 	{ run_command, "%s | ",     	  	"busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
 	{ datetime, "%s",           			"%F %T" },
 };
