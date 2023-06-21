@@ -52,7 +52,7 @@
 		if (cap_perc > 98)
 			cap_perc = 100;
 
-		return bprintf("%d | ", cap_perc);
+		return bprintf("%d", cap_perc);
 	}
 
 	const char *

@@ -65,10 +65,10 @@ static const char unknown_str[] = "n/a";
  */
 static const struct arg args[] = {
 	/* function format          			argument */
-	{ cpu_perc, "  %s% |",           NULL },
-	{ ram_used, " %sB |",					 NULL },
-	{ battery_state, "%s%",    			 	"BAT0" },
+	{ cpu_perc, "  %s% | ",           NULL },
+	{ ram_used, " %s | ",					 NULL },
+	{ battery_state, "%s",    			 	"BAT0" },
 	{ battery_perc, "%s%",    			 	"BAT0" },
-	{ run_command, "%s |",     	  		"busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
+	{ run_command, " | %s | ",     	  "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
 	{ datetime, "%s",           			"%F %T" },
 };
