@@ -35,7 +35,7 @@ static const char *colors[][3] = {
 };
 
 /* tagging */
-static const char *tags[] = {"1", "2", "3", "4", "5", "6", "7", "8", "9"};
+static const char *tags[] = {"1", "2", "3", "4"};
 
 static const Rule rules[] = {
 	/* xprop(1):
@@ -68,6 +68,12 @@ static const Layout layouts[] = {
 	{MODKEY | ShiftMask, KEY, tag, {.ui = 1 << TAG}},\
 	{MODKEY | ControlMask | ShiftMask, KEY, toggletag, {.ui = 1 << TAG}},
 
+#define XF86MonBrightnessDown 0x1008ff02
+#define XF86MonBrightnessUp 0x1008ff03
+#define XF86AudioLowerVolume 0x1008ff11
+#define XF86AudioMute 0x1008ff12
+#define XF86AudioRaiseVolume 0x1008ff13
+
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
@@ -79,49 +85,67 @@ static const char *termcmd[]  = { "kitty", NULL };
 
 static const Key keys[] = {
 	/* modifier                     key         				function  	     	        argument */
-	{MODKEY													, XK_bracketleft 		, shiftviewclients 			, {.i = +1}},
-	{MODKEY | ShiftMask							, XK_bracketleft 		, shiftview 						, {.i = +1}},
-	{MODKEY | ShiftMask							, XK_bracketright 	, shiftview 						, {.i = -1}},
-	{MODKEY													, XK_bracketright 	, shiftviewclients 			, {.i = -1}},
+	// Move between workspaces
+	{MODKEY													, XK_bracketleft	 	, shiftviewclients 			, {.i = -1}},
+	{MODKEY													, XK_bracketright 	, shiftviewclients 			, {.i = +1}},
+	{MODKEY | ShiftMask							, XK_bracketleft	 	, shiftview 						, {.i = -1}},
+	{MODKEY | ShiftMask							, XK_bracketright 	, shiftview 						, {.i = +1}},
+
+	// Spawn applications
 	{MODKEY													, XK_p 							, spawn 								, {.v = dmenucmd}},
 	{MODKEY													, XK_space 					, spawn									, SHCMD("$HOME/.config/rofi/launch.sh")},
 	{MODKEY													, XK_Return 				, spawn 								, {.v = termcmd}},
+
+	// Toggle bar
 	{MODKEY													, XK_b 							, togglebar							, {0}},
+
+	// Focus between windows
 	{MODKEY													, XK_j 							, focusstack 						, {.i = +1}},
 	{MODKEY													, XK_k 							, focusstack 						, {.i = -1}},
+
+	// Move windows into master
 	{MODKEY													, XK_i 							, incnmaster 						, {.i = +1}},
 	{MODKEY													, XK_d 							, incnmaster 						, {.i = -1}},
+
+	// Increase/Decrease windows left-right
 	{MODKEY													, XK_h 							, setmfact 							, {.f = -0.05}},
+	{MODKEY													, XK_l 							, setmfact 							, {.f = +0.05}},
+
+	// Move window to workspaces
 	{MODKEY | ShiftMask							, XK_h 							, shiftboth 						, {.i = -1}},
+	{MODKEY | ShiftMask							, XK_l 							, shiftboth 						, {.i = +1}},
 	{MODKEY | ControlMask						, XK_h 							, shiftswaptags 				, {.i = -1}},
 	{MODKEY | ControlMask						, XK_l 							, shiftswaptags 				, {.i = +1}},
-	{MODKEY | ShiftMask							, XK_l 							, shiftboth 						, {.i = +1}},
-	{MODKEY													, XK_l 							, setmfact 							, {.f = +0.05}},
+
+	// Zoom into master
 	{MODKEY | ShiftMask							, XK_Return 				, zoom									, {0}},
 	{MODKEY													, XK_Tab 						, view									, {0}},
-	{MODKEY | ShiftMask							, XK_c 							, killclient						, {0}},
+
+	// Toggle modes
 	{MODKEY													, XK_t 							, setlayout 						, {.v = &layouts[0]}},
 	{MODKEY													, XK_f 							, setlayout 						, {.v = &layouts[1]}},
 	{MODKEY													, XK_m 							, setlayout 						, {.v = &layouts[2]}},
 	{MODKEY | ControlMask						, XK_space 					, setlayout							, {0}},
 	{MODKEY | ShiftMask							, XK_space 					, togglefloating				, {0}},
+
+	// Weird shit
 	{MODKEY													, XK_0 							, view 									, {.ui = ~0}},
 	{MODKEY | ShiftMask							, XK_0 							, tag 									, {.ui = ~0}},
+
+	// Move and focus between workspaces
 	{MODKEY													, XK_comma 					, focusmon 							, {.i = -1}},
 	{MODKEY													, XK_period 				, focusmon 							, {.i = +1}},
 	{MODKEY | ShiftMask							, XK_comma 					, tagmon 								, {.i = -1}},
 	{MODKEY | ShiftMask							, XK_period 				, tagmon 								, {.i = +1}},
 
-	// XF86MonBrightnessDown
-	{0															, 0x1008ff02 				, spawn									, SHCMD("xbacklight -inc 5")},
-	// XF86MonBrightnessUp
-	{0															, 0x1008ff03 				, spawn									, SHCMD("xbacklight -dec 5")},
-	// XF86AudioLowerVolume
-	{0															, 0x1008ff11 				, spawn									, SHCMD("pamixer --decrease 5")},
-	// XF86AudioMute
-	{0															, 0x1008ff12 				, spawn									, SHCMD("pamixer --toggle-mute")},
-	// XF86AudioRaiseVolume
-	{0															, 0x1008ff13 				, spawn									, SHCMD("pamixer --increase 5")},
+	// Quit window
+	{MODKEY | ShiftMask							, XK_q 							, killclient						, {0}},
+
+	{0															, XF86MonBrightnessDown 				, spawn									, SHCMD("xbacklight -inc 5")},
+	{0															, XF86MonBrightnessUp 				, spawn									, SHCMD("xbacklight -dec 5")},
+	{0															, XF86AudioLowerVolume 				, spawn									, SHCMD("pamixer --decrease 5")},
+	{0															, XF86AudioMute 				, spawn									, SHCMD("pamixer --toggle-mute")},
+	{0															, XF86AudioRaiseVolume 				, spawn									, SHCMD("pamixer --increase 5")},
 	// XF86AudioMicMute
 	// {0															XF86AudioMicMute, spawn,       SHCMD ("pamixer --default-source --toggle-mute")},
 
@@ -129,11 +153,11 @@ static const Key keys[] = {
 	TAGKEYS(XK_2, 1)
 	TAGKEYS(XK_3, 2)
 	TAGKEYS(XK_4, 3)
-	TAGKEYS(XK_5, 4)
-	TAGKEYS(XK_6, 5)
-	TAGKEYS(XK_7, 6)
-	TAGKEYS(XK_8, 7)
-	TAGKEYS(XK_9, 8)
+	// TAGKEYS(XK_5, 4)
+	// TAGKEYS(XK_6, 5)
+	// TAGKEYS(XK_7, 6)
+	// TAGKEYS(XK_8, 7)
+	// TAGKEYS(XK_9, 8)
 };
 
 /* button definitions */
