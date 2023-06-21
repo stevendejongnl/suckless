@@ -38,6 +38,9 @@
 	const char *
 	battery_perc(const char *bat)
 	{
+		if (gethostname(buf, sizeof(buf)) >= 0 && strcmp(buf, "archworkstation") == 0)
+			return NULL;
+
 		int cap_perc;
 		char path[PATH_MAX];
 
@@ -49,20 +52,23 @@
 		if (cap_perc > 98)
 			cap_perc = 100;
 
-		return bprintf("%d", cap_perc);
+		return bprintf("%d | ", cap_perc);
 	}
 
 	const char *
 	battery_state(const char *bat)
 	{
+		if (gethostname(buf, sizeof(buf)) >= 0 && strcmp(buf, "archworkstation") == 0)
+			return NULL;
+
 		static struct {
 			char *state;
 			char *symbol;
 		} map[] = {
-			{ "Charging",    "+" },
-			{ "Discharging", "-" },
-			{ "Full",        "o" },
-			{ "Not charging", "o" },
+			{ "Charging",    " " },
+			{ "Discharging", " " },
+			{ "Full",        " " },
+			{ "Not charging", " " },
 		};
 		size_t i;
 		char path[PATH_MAX], state[12];
