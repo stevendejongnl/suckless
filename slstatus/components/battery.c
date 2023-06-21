@@ -46,6 +46,9 @@
 		if (pscanf(path, "%d", &cap_perc) != 1)
 			return NULL;
 
+		if (cap_perc > 98)
+			cap_perc = 100;
+
 		return bprintf("%d", cap_perc);
 	}
 

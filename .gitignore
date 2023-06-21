@@ -9,4 +9,5 @@ slstatus/config.h
 slstatus/slstatus
 slstatus/slstatus.o
 slstatus/util.o
-slstatus/components
+slstatus/components/
+!slstatus/components/battery.c
