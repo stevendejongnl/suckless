@@ -38,9 +38,6 @@
 	const char *
 	battery_perc(const char *bat)
 	{
-		if (gethostname(buf, sizeof(buf)) >= 0 && strcmp(buf, "archworkstation") == 0)
-			return NULL;
-
 		int cap_perc;
 		char path[PATH_MAX];
 
@@ -58,9 +55,6 @@
 	const char *
 	battery_state(const char *bat)
 	{
-		if (gethostname(buf, sizeof(buf)) >= 0 && strcmp(buf, "archworkstation") == 0)
-			return NULL;
-
 		static struct {
 			char *state;
 			char *symbol;
@@ -119,6 +113,31 @@
 		}
 
 		return "";
+	}
+
+	const char *
+	battery_combined(const char *bat)
+	{
+		if (gethostname(buf, sizeof(buf)) >= 0 && strcmp(buf, "archworkstation") == 0)
+			return NULL;
+
+    const char *state = battery_state(bat);
+    const char *perc = battery_perc(bat);
+
+    if (state == NULL || perc == NULL)
+			return NULL;
+
+    char *combined = malloc(strlen(state) + strlen(perc) + 6);
+
+    if (combined == NULL)
+			return NULL;
+
+    strcpy(combined, state);
+    strcat(combined, " ");
+    strcat(combined, perc);
+    strcat(combined, "% | ");
+
+    return combined;
 	}
 #elif defined(__OpenBSD__)
 	#include <fcntl.h>

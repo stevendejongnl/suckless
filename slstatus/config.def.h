@@ -4,7 +4,7 @@
 const unsigned int interval = 1000;
 
 /* text to show if no value can be retrieved */
-static const char unknown_str[] = "n/a";
+static const char unknown_str[] = "";
 
 /* maximum output string length */
 #define MAXLEN 2048
@@ -18,6 +18,7 @@ static const char unknown_str[] = "n/a";
  *                                                     NULL on OpenBSD/FreeBSD
  * battery_state       battery charging state          battery name (BAT0)
  *                                                     NULL on OpenBSD/FreeBSD
+ * battery_combined		 battery charging state and perc battery name (BAT0)
  * cat                 read arbitrary file             path
  * cpu_freq            cpu frequency in MHz            NULL
  * cpu_perc            cpu usage in percent            NULL
@@ -67,8 +68,7 @@ static const struct arg args[] = {
 	/* function format          			argument */
 	{ cpu_perc, "  %s% | ",           NULL },
 	{ ram_used, " %s | ",					 NULL },
-	{ battery_state, "%s",    			 	"BAT0" },
-	{ battery_perc, "%s%",    			 	"BAT0" },
-	{ run_command, " | %s | ",     	  "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
+	{ battery_combined, "%s",					"BAT0" },
+	{ run_command, "%s | ",     	  	"busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
 	{ datetime, "%s",           			"%F %T" },
 };
