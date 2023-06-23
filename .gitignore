@@ -1,13 +1,18 @@
 dwm/config.h
-dwm/config.def.h
 dwm/dwm
-dwm/util.o
-dwm/drw.o
-dwm/dwm.o
+dwm/*.o
 
 slstatus/config.h
 slstatus/slstatus
-slstatus/slstatus.o
-slstatus/util.o
+slstatus/*.o
 slstatus/components/
 !slstatus/components/battery.c
+
+dmenu/config.h
+dmenu/dmenu
+dmenu/*.o
+
+surf/config.h
+surf/surf
+surf/*.o
+surf/*.so
