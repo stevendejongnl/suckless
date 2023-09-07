@@ -25,15 +25,15 @@ static const char *fonts[] = {
 };
 static const char dmenufont[] = "xos4 Terminus:size=10";
 
-static const char col_text1[] = "#cdd6f4";
-static const char col_text2[] = "#bbbbbb";
-static const char col_surface1[] = "#313244";
-static const char col_surface2[] = "#585b70";
-static const char col_surface3[] = "#45475a";
+ static const char col_text1[] = "#80CBC4";
+ static const char col_text2[] = "#EEFFFF";
+ static const char col_surface1[] = "#263238";
+ static const char col_surface2[] = "#263238";
+ static const char col_surface3[] = "#546E7A";
 static const char *colors[][3] = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = {col_text2, col_surface2, col_surface3},
-	[SchemeSel] = {col_text1, col_surface1, col_surface1},
+	[SchemeSel] =  {col_text1, col_surface1, col_surface1},
 };
 
 /* tagging */
