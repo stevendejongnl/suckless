@@ -47,6 +47,7 @@ static const char unknown_str[] = "";
  * ram_total           total memory size in GB         NULL
  * ram_used            used memory in GB               NULL
  * run_command         custom shell command            command (echo foo)
+ * separator           string to echo                  NULL
  * swap_free           free swap in GB                 NULL
  * swap_perc           swap usage in percent           NULL
  * swap_total          total swap size in GB           NULL
@@ -65,12 +66,12 @@ static const char unknown_str[] = "";
  * wifi_perc           WiFi signal in percent          interface name (wlan0)
  */
 static const struct arg args[] = {
-	/* function format          			argument */
-	{ cpu_perc, "  %s% | ",           NULL },
-	{ ram_used, " %s | ",					 NULL },
-	{ battery_combined, "%s",					"BAT0" },
-	{ run_command, "%s",     	  	    ".dwm/package-updates.sh" },
-	{ run_command, "%s",     	      	".dwm/pipewire.sh" },
-	{ run_command, "%s | ",     	  	"busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
-	{ datetime, "%s",           			"%F %T" },
+	/* function 		format          	argument */
+	{ cpu_perc			, "  %s%"			, NULL },
+	{ ram_used			, " %s"			, NULL },
+	// { battery_combined	, "%s"				, "BAT0" },
+	{ run_command		, "%s"				, ".dwm/package-updates.sh" },
+	{ run_command		, "%s"				, ".dwm/pipewire.sh" },
+	{ run_command		, "%s"				, "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
+	{ datetime			, "%s"				, "%F %T" },
 };

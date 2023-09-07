@@ -22,6 +22,7 @@ COM =\
 	components/num_files\
 	components/ram\
 	components/run_command\
+	components/separator\
 	components/swap\
 	components/temperature\
 	components/uptime\
