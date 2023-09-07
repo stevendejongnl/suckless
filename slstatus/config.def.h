@@ -67,11 +67,15 @@ static const char unknown_str[] = "";
  */
 static const struct arg args[] = {
 	/* function 		format          	argument */
-	{ cpu_perc			, "  %s%"			, NULL },
+	{ separator			, "• "				, NULL },
+	{ cpu_perc			, " %s％"			, NULL },
+	{ separator			, " • "				, NULL },
 	{ ram_used			, " %s"			, NULL },
-	// { battery_combined	, "%s"				, "BAT0" },
+	{ separator			, " • "				, NULL },
 	{ run_command		, "%s"				, ".dwm/package-updates.sh" },
 	{ run_command		, "%s"				, ".dwm/pipewire.sh" },
 	{ run_command		, "%s"				, "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
+	{ separator			, " • "				, NULL },
 	{ datetime			, "%s"				, "%F %T" },
+	{ separator			, " • "				, NULL },
 };
