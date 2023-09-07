@@ -87,71 +87,71 @@ static const char *termcmd[]  = { "kitty", NULL };
 #include "shift-tools.c"
 
 static const Key keys[] = {
-	/* modifier                     key         				function  	     	        argument */
+	/* modifier                     key         					function  	     	       			argument */
 	// Move between workspaces
-	{MODKEY													, XK_bracketleft	 	, shiftviewclients 			, {.i = -1}},
-	{MODKEY													, XK_bracketright 	, shiftviewclients 			, {.i = +1}},
-	{MODKEY | ShiftMask							, XK_bracketleft	 	, shiftview 						, {.i = -1}},
-	{MODKEY | ShiftMask							, XK_bracketright 	, shiftview 						, {.i = +1}},
+	{MODKEY							, XK_bracketleft	 			, shiftviewclients 					, {.i = -1}},
+	{MODKEY							, XK_bracketright 				, shiftviewclients 					, {.i = +1}},
+	{MODKEY | ShiftMask				, XK_bracketleft	 			, shiftview 						, {.i = -1}},
+	{MODKEY | ShiftMask				, XK_bracketright 				, shiftview 						, {.i = +1}},
 
 	// Spawn applications
-	{MODKEY													, XK_p 							, spawn 								, {.v = dmenucmd}},
-	{MODKEY													, XK_space 					, spawn									, SHCMD("$HOME/.config/rofi/launch.sh")},
-	{MODKEY													, XK_Return 				, spawn 								, {.v = termcmd}},
+	{MODKEY							, XK_p 							, spawn 							, {.v = dmenucmd}},
+	{MODKEY							, XK_space 						, spawn								, SHCMD("rofi -show drun")},
+	{MODKEY							, XK_Return 					, spawn 							, {.v = termcmd}},
 
 	// Toggle bar
-	{MODKEY													, XK_b 							, togglebar							, {0}},
+	{MODKEY							, XK_b 							, togglebar							, {0}},
 
 	// Focus between windows
-	{MODKEY													, XK_j 							, focusstack 						, {.i = +1}},
-	{MODKEY													, XK_k 							, focusstack 						, {.i = -1}},
+	{MODKEY							, XK_j 							, focusstack 						, {.i = +1}},
+	{MODKEY							, XK_k 							, focusstack 						, {.i = -1}},
 
 	// Move windows into master
-	{MODKEY													, XK_i 							, incnmaster 						, {.i = +1}},
-	{MODKEY													, XK_d 							, incnmaster 						, {.i = -1}},
+	{MODKEY							, XK_i 							, incnmaster 						, {.i = +1}},
+	{MODKEY							, XK_d 							, incnmaster 						, {.i = -1}},
 
 	// Increase/Decrease windows left-right
-	{MODKEY													, XK_h 							, setmfact 							, {.f = -0.05}},
-	{MODKEY													, XK_l 							, setmfact 							, {.f = +0.05}},
+	{MODKEY							, XK_h 							, setmfact 							, {.f = -0.05}},
+	{MODKEY							, XK_l 							, setmfact 							, {.f = +0.05}},
 
 	// Move window to workspaces
-	{MODKEY | ShiftMask							, XK_h 							, shiftboth 						, {.i = -1}},
-	{MODKEY | ShiftMask							, XK_l 							, shiftboth 						, {.i = +1}},
-	{MODKEY | ControlMask						, XK_h 							, shiftswaptags 				, {.i = -1}},
-	{MODKEY | ControlMask						, XK_l 							, shiftswaptags 				, {.i = +1}},
+	{MODKEY | ShiftMask				, XK_h 							, shiftboth 						, {.i = -1}},
+	{MODKEY | ShiftMask				, XK_l 							, shiftboth 						, {.i = +1}},
+	{MODKEY | ControlMask			, XK_h 							, shiftswaptags 					, {.i = -1}},
+	{MODKEY | ControlMask			, XK_l 							, shiftswaptags 					, {.i = +1}},
 
 	// Zoom into master
-	{MODKEY | ShiftMask							, XK_Return 				, zoom									, {0}},
-	{MODKEY													, XK_Tab 						, view									, {0}},
+	{MODKEY | ShiftMask				, XK_Return 					, zoom									, {0}},
+	{MODKEY							, XK_Tab 						, view									, {0}},
 
 	// Toggle modes
-	{MODKEY													, XK_t 							, setlayout 						, {.v = &layouts[0]}},
-	{MODKEY													, XK_f 							, setlayout 						, {.v = &layouts[1]}},
-	{MODKEY													, XK_m 							, setlayout 						, {.v = &layouts[2]}},
-	{MODKEY													, XK_n 							, setlayout 						, {.v = &layouts[3]}},
-	{MODKEY | ControlMask						, XK_space 					, setlayout							, {0}},
-	{MODKEY | ShiftMask							, XK_space 					, togglefloating				, {0}},
+	{MODKEY							, XK_t 							, setlayout 						, {.v = &layouts[0]}},
+	{MODKEY							, XK_f 							, setlayout 						, {.v = &layouts[1]}},
+	{MODKEY							, XK_m 							, setlayout 						, {.v = &layouts[2]}},
+	{MODKEY							, XK_n 							, setlayout 						, {.v = &layouts[3]}},
+	{MODKEY | ControlMask			, XK_space 						, setlayout							, {0}},
+	{MODKEY | ShiftMask				, XK_space 						, togglefloating					, {0}},
 
 	// Weird shit
-	{MODKEY													, XK_0 							, view 									, {.ui = ~0}},
-	{MODKEY | ShiftMask							, XK_0 							, tag 									, {.ui = ~0}},
+	{MODKEY							, XK_0 							, view 								, {.ui = ~0}},
+	{MODKEY | ShiftMask				, XK_0 							, tag 								, {.ui = ~0}},
 
 	// Move and focus between workspaces
-	{MODKEY													, XK_comma 					, focusmon 							, {.i = -1}},
-	{MODKEY													, XK_period 				, focusmon 							, {.i = +1}},
-	{MODKEY | ShiftMask							, XK_comma 					, tagmon 								, {.i = -1}},
-	{MODKEY | ShiftMask							, XK_period 				, tagmon 								, {.i = +1}},
+	{MODKEY							, XK_comma 						, focusmon 							, {.i = -1}},
+	{MODKEY							, XK_period 					, focusmon 							, {.i = +1}},
+	{MODKEY | ShiftMask				, XK_comma 						, tagmon 							, {.i = -1}},
+	{MODKEY | ShiftMask				, XK_period 					, tagmon 							, {.i = +1}},
 
 	// Quit window
-	{MODKEY | ShiftMask							, XK_q 							, killclient						, {0}},
+	{MODKEY | ShiftMask				, XK_q 							, killclient						, {0}},
 
-	{0															, XF86MonBrightnessDown 				, spawn									, SHCMD("xbacklight -inc 5")},
-	{0															, XF86MonBrightnessUp 				, spawn									, SHCMD("xbacklight -dec 5")},
-	{0															, XF86AudioLowerVolume 				, spawn									, SHCMD("pamixer --decrease 5")},
-	{0															, XF86AudioMute 				, spawn									, SHCMD("pamixer --toggle-mute")},
-	{0															, XF86AudioRaiseVolume 				, spawn									, SHCMD("pamixer --increase 5")},
+	{0								, XF86MonBrightnessDown 		, spawn								, SHCMD("xbacklight -inc 5")},
+	{0								, XF86MonBrightnessUp 			, spawn								, SHCMD("xbacklight -dec 5")},
+	{0								, XF86AudioLowerVolume 			, spawn								, SHCMD("pamixer --decrease 5")},
+	{0								, XF86AudioMute 				, spawn								, SHCMD("pamixer --toggle-mute")},
+	{0								, XF86AudioRaiseVolume 			, spawn								, SHCMD("pamixer --increase 5")},
 	// XF86AudioMicMute
-	// {0															XF86AudioMicMute, spawn,       SHCMD ("pamixer --default-source --toggle-mute")},
+	//{0								, XF86AudioMicMute				, spawning							, SHCMD ("pamixer --default-source --toggle-mute")},
 
 	TAGKEYS(XK_1, 0)
 	TAGKEYS(XK_2, 1)
@@ -168,10 +168,10 @@ static const Key keys[] = {
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static const Button buttons[] = {
 	/* click            event mask  button      function        		argument */
-	{ClkTagBar				, MODKEY		, Button1		, tag								, {0}},
-	{ClkTagBar				, MODKEY		, Button3		, toggletag					, {0}},
-	{ClkWinTitle			, 0					, Button2		, zoom							, {0}},
-	{ClkStatusText		, 0					, Button2		, spawn							, {.v = termcmd}},
+	{ClkTagBar			, MODKEY	, Button1	, tag					, {0}},
+	{ClkTagBar			, MODKEY	, Button3	, toggletag				, {0}},
+	{ClkWinTitle		, 0			, Button2	, zoom					, {0}},
+	{ClkStatusText		, 0			, Button2	, spawn					, {.v = termcmd}},
 	/* placemouse options, choose which feels more natural:
 	 *    0 - tiled position is relative to mouse cursor
 	 *    1 - tiled position is relative to window center
@@ -182,11 +182,11 @@ static const Button buttons[] = {
 	 * to control these separately (i.e. to retain the feature to move a tiled window
 	 * into a floating position).
 	 */
-	{ClkClientWin			, MODKEY		, Button1		, moveorplace				, {.i = 2} },
-	{ClkClientWin			, MODKEY		, Button2		, togglefloating		, {0}},
-	{ClkClientWin			, MODKEY		, Button3		, resizemouse				, {0}},
-	{ClkTagBar				, 0					, Button1		, view							, {0}},
-	{ClkTagBar				, 0					, Button3		, toggleview				, {0}},
-	{ClkTagBar				, MODKEY		, Button1		, tag								, {0}},
-	{ClkTagBar				, MODKEY		, Button3		, toggletag					, {0}},
+	{ClkClientWin		, MODKEY	, Button1	, moveorplace			, {.i = 2} },
+	{ClkClientWin		, MODKEY	, Button2	, togglefloating		, {0}},
+	{ClkClientWin		, MODKEY	, Button3	, resizemouse			, {0}},
+	{ClkTagBar			, 0			, Button1	, view					, {0}},
+	{ClkTagBar			, 0			, Button3	, toggleview			, {0}},
+	{ClkTagBar			, MODKEY	, Button1	, tag					, {0}},
+	{ClkTagBar			, MODKEY	, Button3	, toggletag				, {0}},
 };
