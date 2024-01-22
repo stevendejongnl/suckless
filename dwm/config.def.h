@@ -97,6 +97,7 @@ static const Key keys[] = {
 	// Spawn applications
 	{MODKEY							, XK_p 							, spawn 							, {.v = dmenucmd}},
 	{MODKEY							, XK_space 						, spawn								, SHCMD("rofi -show drun")},
+	{MODKEY | ControlMask , XK_space 						, spawn								, SHCMD("rofi -show window")},
 	{MODKEY							, XK_Return 					, spawn 							, {.v = termcmd}},
 
 	// Toggle bar
