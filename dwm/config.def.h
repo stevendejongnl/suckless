@@ -44,9 +44,10 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   monitor */
-	{ "Kitty",    NULL,       NULL,       0,            0,           -1 },
-	// { "Brave",    NULL,       NULL,       1 << 8,       0,           -1 },
+	/* class                         instance    title       tags mask     isfloating   monitor */
+	{ "Kitty",                       NULL,       NULL,       0,            0,           -1 },
+	{ "google-chat-linux",           NULL,       NULL,       8,            0,           -1 },
+  { "whatsapp-nativefier-d40211",  NULL,       NULL,       8,            0,           -1 },
 };
 
 /* layout(s) */
@@ -83,7 +84,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_surface2, "-nf", col_text2, "-sb", col_surface1, "-sf", col_text1, NULL };
-static const char *termcmd[]  = { "kitty", NULL };
+static const char *termcmd[]  = { "kitty", "tmux", NULL };
 #include "shift-tools.c"
 
 static const Key keys[] = {

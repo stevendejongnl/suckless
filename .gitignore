@@ -11,8 +11,5 @@ slstatus/components/
 dmenu/config.h
 dmenu/dmenu
 dmenu/*.o
+dmenu/stest
 
-surf/config.h
-surf/surf
-surf/*.o
-surf/*.so
