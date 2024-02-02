@@ -43,7 +43,7 @@ static const Rule rules[] = {
 		 *	WM_CLASS(STRING) = instance, class
 		 *	WM_NAME(STRING) = title
 		 */
-		/* class                          instance    title       tags mask     isfloating    monitor */
+		/* class, instance, title, tags mask, isfloating, monitor */
 		{"Gcr-prompter", NULL, NULL, 1, 0, -1},
 		{"Lxpolkit", NULL, NULL, 1, 0, -1},
 		{"1Password", NULL, NULL, 1, 0, -1},
@@ -58,7 +58,7 @@ static const int resizehints = 1;		 /* 1 means respect size hints in tiled resiz
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 static const Layout layouts[] = {
-		/* symbol     arrange function */
+		/* symbol, arrange function */
 		{"\uE005", tile},
 		{"\uE011", NULL}, /* Floating */
 		{"[M]", monocle},
@@ -172,7 +172,7 @@ static const Key keys[] = {
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static const Button buttons[] = {
-		/* click            event mask  button      function        		argument */
+		/* click, event mask, button, function, argument */
 		{ClkTagBar, MODKEY, Button1, tag, {0}},
 		{ClkTagBar, MODKEY, Button3, toggletag, {0}},
 		{ClkWinTitle, 0, Button2, zoom, {0}},
