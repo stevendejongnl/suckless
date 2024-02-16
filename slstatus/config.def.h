@@ -74,6 +74,7 @@ static const struct arg args[] = {
 	{ separator			, " • "				, NULL },
 	{ run_command		, "%s"				, ".dwm/package-updates.sh" },
 	{ run_command		, "%s"				, ".dwm/pipewire.sh" },
+	{ run_command		, "%s"				, ".dwm/bluetooth.sh" },
 	{ run_command		, "%s"				, "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
 	{ separator			, " • "				, NULL },
 	{ datetime			, "%s"				, "%F %T" },
