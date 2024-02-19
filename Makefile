@@ -1,6 +1,6 @@
-.PHONY: dwm slstatus dmenu all
+.PHONY: dwm slstatus dmenu slock all
 
-all: dwm slstatus dmenu
+all: dwm slstatus dmenu slock
 
 dwm:
 	rm -rf ./dwm/config.h
@@ -13,4 +13,8 @@ slstatus:
 dmenu:
 	rm -rf ./dmenu/config.h
 	sudo make -C ./dmenu clean install
+
+slock:
+	rm -rf ./slock/config.h
+	sudo make -C ./slock clean install
 
