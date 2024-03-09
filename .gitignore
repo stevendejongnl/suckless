@@ -14,4 +14,5 @@ dmenu/*.o
 dmenu/stest
 
 slock/config.h
+slock/slock
 slock/*.o
