@@ -66,22 +66,13 @@ static const char unknown_str[] = "";
  * wifi_perc           WiFi signal in percent          interface name (wlan0)
  */
 static const struct arg args[] = {
-	/* function 		format          	argument */
-	{ separator			, "• "				, NULL },
-	{ cpu_perc			, "  %s％"			, NULL },
-	{ separator			, " • "				, NULL },
-	{ ram_used			, " %s"			, NULL },
-  { swap_free     , " / %s"     , NULL },
-	{ separator			, " • "				, NULL },
-  { keyboard_indicators, "%s"   , "%F c?n?" },
-  { separator			, " • "				, NULL },
-  { run_command		, "%s"				, "/home/stevendejong/.dwm/package-updates.sh" },
-	{ run_command		, "%s"				, "/home/stevendejong/.dwm/pipewire.sh" },
-	{ run_command		, "%s"				, "/home/stevendejong/.dwm/bluetooth.sh" },
-	{ run_command		, "%s"				, "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
-	{ separator			, " • "				, NULL },
-	{ datetime			, "%s"				, "%F %T" },
-	{ separator			, " • "				, NULL },
-  { ipv4    			, "%s"				, "wlp3s0" },
-  { separator			, " • "				, NULL },
+    /* function 		format          	argument */
+    { cpu_perc			, "cpu %s％ - "		, NULL },
+    { ram_used			, "ram %s - "		, NULL },
+    { swap_free         , "swap %s - "       , NULL },
+    { run_command		, "%s"				, "/home/stevendejong/.dwm/package-updates.sh" },
+    { run_command		, "%s"				, "/home/stevendejong/.dwm/pipewire.sh" },
+    { run_command		, "%s"				, "/home/stevendejong/.dwm/bluetooth.sh" },
+    // { run_command		, "%s"				, "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
+    { datetime			, "%s"				, "%F %T" },
 };

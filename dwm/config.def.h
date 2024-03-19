@@ -4,7 +4,7 @@
 
 /* appearance */
 static const unsigned int borderpx = 3;				/* border pixel of windows */
-static const unsigned int gappx = 5;					/* gap pixel between windows */
+static const unsigned int gappx = 3;					/* gap pixel between windows */
 static const unsigned int snap = 1;						/* snap pixel */
 static const unsigned int systraypinning = 0; /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft = 0;	/* 0: systray in the right corner, >0: systray on left of status text */
@@ -27,7 +27,7 @@ static const char dmenufont[] = "xos4 Terminus:size=10";
 static const char col_text1[] = "#585273";
 static const char col_text2[] = "#CBE3E7";
 static const char col_surface1[] = "#3E3859";
-static const char col_surface2[] = "#3E3859";
+static const char col_surface2[] = "#2D2B40";
 static const char col_surface3[] = "#8A889D";
 static const char *colors[][3] = {
     /* fg, bg, border */
@@ -44,11 +44,12 @@ static const Rule rules[] = {
      *	WM_NAME(STRING) = title
      */
     /* class, instance, title, tags mask, isfloating, monitor */
-    {"Gcr-prompter", NULL, NULL, 1, 0, -1},
-    {"Lxpolkit", NULL, NULL, 1, 0, -1},
-    {"1Password", NULL, NULL, 1, 0, -1},
+    {"Gcr-prompter", NULL, NULL, ~0, 0, -1},
+    {"Lxpolkit", NULL, NULL, ~0, 0, -1},
+    {"1Password", NULL, NULL, ~0, 0, -1},
     {"google-chat-linux", NULL, NULL, 1 << 8, 0, -1},
     {"whatsapp-nativefier-d40211", NULL, NULL, 1 << 8, 0, -1},
+    {"slack", NULL, NULL, 1 << 8, 0, -1},
 };
 
 /* layout(s) */
@@ -78,6 +79,9 @@ static const Layout layouts[] = {
 #define XF86AudioLowerVolume 0x1008ff11
 #define XF86AudioMute 0x1008ff12
 #define XF86AudioRaiseVolume 0x1008ff13
+#define XF86Messenger 0x1008ff8e
+#define XF86Favorite 0x1008ff30
+#define XF86WLAN 0x1008ff95
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) \
@@ -102,7 +106,7 @@ static const Key keys[] = {
     // Spawn applications
     {MODKEY, XK_p, spawn, {.v = dmenucmd}},
     {MODKEY, XK_space, spawn, SHCMD("rofi -show drun")},
-    {MODKEY | ControlMask, XK_space, spawn, SHCMD("rofi -show window")},
+    {MODKEY | Mod1Mask, XK_space, spawn, SHCMD("rofi -show window")},
     {MODKEY, XK_Return, spawn, {.v = termcmd}},
 
     // Toggle bar
@@ -138,11 +142,12 @@ static const Key keys[] = {
     {MODKEY | ControlMask, XK_space, setlayout, {0}},
     {MODKEY | ShiftMask, XK_space, togglefloating, {0}},
 
-    // Weird shit
+    // Show all windows
     {MODKEY, XK_0, view, {.ui = ~0}},
+    // Pin window to move active tag
     {MODKEY | ShiftMask, XK_0, tag, {.ui = ~0}},
 
-    // Move and focus between workspaces
+    // Move and focus between tags
     {MODKEY, XK_comma, focusmon, {.i = -1}},
     {MODKEY, XK_period, focusmon, {.i = +1}},
     {MODKEY | ShiftMask, XK_comma, tagmon, {.i = -1}},
@@ -158,6 +163,9 @@ static const Key keys[] = {
     {0, XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5")},
     // XF86AudioMicMute
     //{0, XF86AudioMicMute, spawning, SHCMD ("pamixer --default-source --toggle-mute")},
+    {0, XF86Messenger, spawn, SHCMD("python /home/stevendejong/scripts/messenger.py")},
+    {0, XF86Favorite, spawn, SHCMD("python /home/stevendejong/scripts/favorites.py")},
+    {0, XF86WLAN, spawn, SHCMD("python /home/stevendejong/scripts/connect_wifi.py stanja")},
 
     TAGKEYS(XK_1, 0)
         TAGKEYS(XK_2, 1)
