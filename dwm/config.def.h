@@ -3,36 +3,32 @@
 #include "tcl.c"
 
 /* appearance */
-static const unsigned int borderpx = 3;				/* border pixel of windows */
-static const unsigned int gappx = 3;					/* gap pixel between windows */
-static const unsigned int snap = 1;						/* snap pixel */
-static const unsigned int systraypinning = 0; /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
-static const unsigned int systrayonleft = 0;	/* 0: systray in the right corner, >0: systray on left of status text */
-static const unsigned int systrayspacing = 2; /* systray spacing */
-static const int systraypinningfailfirst = 1; /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
-static const int showsystray = 1;							/* 0 means no systray */
-static const int showbar = 1;									/* 0 means no bar */
-static const int topbar = 1;									/* 0 means bottom bar */
-static const int focusonwheel = 0;
+static const unsigned int borderpx          = 3;    /* border pixel of windows */
+static const unsigned int gappx             = 3;    /* gap pixel between windows */
+static const unsigned int snap              = 1;    /* snap pixel */
+static const unsigned int systraypinning    = 0;    /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
+static const unsigned int systrayonleft     = 0;    /* 0: systray in the right corner, >0: systray on left of status text */
+static const unsigned int systrayspacing    = 2;    /* systray spacing */
+static const int systraypinningfailfirst    = 1;    /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
+static const int showsystray                = 1;    /* 0 means no systray */
+static const int showbar                    = 1;    /* 0 means no bar */
+static const int topbar                     = 1;    /* 0 means bottom bar */
+static const int focusonwheel               = 0;
 
 static const char *fonts[] = {
-    "Wuncon Siji:size=12",
-    "WeatherIcons:size=10",
     "UbuntuMono Nerd Font:size=10",
-    "Font Awesome 5 Pro:size=10",
-    "MaterialIcons:size=10",
     "xos4 Terminus:size=10"};
 static const char dmenufont[] = "xos4 Terminus:size=10";
 
-static const char col_text1[] = "#585273";
-static const char col_text2[] = "#CBE3E7";
-static const char col_surface1[] = "#3E3859";
-static const char col_surface2[] = "#2D2B40";
-static const char col_surface3[] = "#8A889D";
+static const char col_text1[]       = "#585273";
+static const char col_text2[]       = "#CBE3E7";
+static const char col_surface1[]    = "#3E3859";
+static const char col_surface2[]    = "#2D2B40";
+static const char col_surface3[]    = "#8A889D";
 static const char *colors[][3] = {
     /* fg, bg, border */
-    [SchemeNorm] = {col_text2, col_surface2, col_surface3},
-    [SchemeSel] = {col_text1, col_surface1, col_surface1},
+    [SchemeNorm]    = {col_text2, col_surface2, col_surface3},
+    [SchemeSel]     = {col_text1, col_surface1, col_surface1},
 };
 
 /* tagging */
@@ -43,25 +39,23 @@ static const Rule rules[] = {
      *	WM_CLASS(STRING) = instance, class
      *	WM_NAME(STRING) = title
      */
-    /* class, instance, title, tags mask, isfloating, monitor */
-    {"Gcr-prompter", NULL, NULL, ~0, 0, -1},
-    {"Lxpolkit", NULL, NULL, ~0, 0, -1},
-    {"1Password", NULL, NULL, ~0, 0, -1},
-    {"google-chat-linux", NULL, NULL, 1 << 8, 0, -1},
-    {"whatsapp-nativefier-d40211", NULL, NULL, 1 << 8, 0, -1},
-    {"slack", NULL, NULL, 1 << 8, 0, -1},
+    /* class,           instance,   title,  tags mask,  isfloating,     monitor */
+    {"Gcr-prompter",    NULL,       NULL,   ~0,         0,              -1},
+    {"Lxpolkit",        NULL,       NULL,   ~0,         0,              -1},
+    {"1Password",       NULL,       NULL,   ~0,         0,              -1},
+    {"slack",           NULL,       NULL,   1 << 8,     0,              -1},
 };
 
 /* layout(s) */
-static const float mfact = 0.55;		 /* factor of master area size [0.05..0.95] */
-static const int nmaster = 1;				 /* number of clients in master area */
-static const int resizehints = 1;		 /* 1 means respect size hints in tiled resizals */
-static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
+static const float mfact = 0.55;        /* factor of master area size [0.05..0.95] */
+static const int nmaster = 1;           /* number of clients in master area */
+static const int resizehints = 1;       /* 1 means respect size hints in tiled resizals */
+static const int lockfullscreen = 1;    /* 1 will force focus on the fullscreen window */
 
 static const Layout layouts[] = {
     /* symbol, arrange function */
-    {"\uE005", tile},
-    {"\uE011", NULL}, /* Floating */
+    {"[]=", tile},
+    {"><>", NULL},
     {"[M]", monocle},
     {"|||", tcl},
 };
@@ -69,10 +63,10 @@ static const Layout layouts[] = {
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY, TAG) \
-{MODKEY, KEY, view, {.ui = 1 << TAG}}, \
-{MODKEY | ControlMask, KEY, toggleview, {.ui = 1 << TAG}}, \
-{MODKEY | ShiftMask, KEY, tag, {.ui = 1 << TAG}}, \
-{MODKEY | ControlMask | ShiftMask, KEY, toggletag, {.ui = 1 << TAG}},
+    { MODKEY,                           KEY,    view,           {.ui = 1 << TAG}}, \
+    { MODKEY | ControlMask,             KEY,    toggleview,     {.ui = 1 << TAG}}, \
+    { MODKEY | ShiftMask,               KEY,    tag,            {.ui = 1 << TAG}}, \
+    { MODKEY | ControlMask | ShiftMask, KEY,    toggletag,      {.ui = 1 << TAG}},
 
 #define XF86MonBrightnessDown 0x1008ff02
 #define XF86MonBrightnessUp 0x1008ff03
@@ -96,66 +90,68 @@ static const char *termcmd[] = {"kitty", "tmux", NULL};
 #include "shift-tools.c"
 
 static const Key keys[] = {
-    /* modifier, key, function, argument */
+    /* modifier,            key,                function,           argument */
     // Move between workspaces
-    {MODKEY, XK_bracketleft, shiftviewclients, {.i = -1}},
-    {MODKEY, XK_bracketright, shiftviewclients, {.i = +1}},
-    {MODKEY | ShiftMask, XK_bracketleft, shiftview, {.i = -1}},
-    {MODKEY | ShiftMask, XK_bracketright, shiftview, {.i = +1}},
+    {MODKEY,                XK_bracketleft,     shiftviewclients,   {.i = -1}},
+    {MODKEY,                XK_bracketright,    shiftviewclients,   {.i = +1}},
+    {MODKEY | ShiftMask,    XK_bracketleft,     shiftview,          {.i = -1}},
+    {MODKEY | ShiftMask,    XK_bracketright,    shiftview,          {.i = +1}},
 
     // Spawn applications
-    {MODKEY, XK_p, spawn, {.v = dmenucmd}},
-    {MODKEY, XK_space, spawn, SHCMD("rofi -show drun")},
-    {MODKEY | Mod1Mask, XK_space, spawn, SHCMD("rofi -show window")},
-    {MODKEY, XK_Return, spawn, {.v = termcmd}},
+    {MODKEY,                XK_p,               spawn,              {.v = dmenucmd}},
+    {MODKEY,                XK_space,           spawn,              SHCMD("rofi -show drun")},
+    {MODKEY | Mod1Mask,     XK_space,           spawn,              SHCMD("rofi -show window")},
+    {MODKEY,                XK_Return,          spawn,              {.v = termcmd}},
 
     // Toggle bar
-    {MODKEY, XK_b, togglebar, {0}},
+    {MODKEY,                XK_b,               togglebar,          {0}},
 
     // Focus between windows
-    {MODKEY, XK_j, focusstack, {.i = +1}},
-    {MODKEY, XK_k, focusstack, {.i = -1}},
+    {MODKEY,                XK_j,               focusstack,         {.i = +1}},
+    {MODKEY,                XK_k,               focusstack,         {.i = -1}},
 
     // Move windows into master
-    {MODKEY, XK_i, incnmaster, {.i = +1}},
-    {MODKEY, XK_d, incnmaster, {.i = -1}},
+    {MODKEY,                XK_i,               incnmaster,         {.i = +1}},
+    {MODKEY,                XK_d,               incnmaster,         {.i = -1}},
 
     // Increase/Decrease windows left-right
-    {MODKEY, XK_h, setmfact, {.f = -0.05}},
-    {MODKEY, XK_l, setmfact, {.f = +0.05}},
+    {MODKEY,                XK_h,               setmfact,           {.f = -0.05}},
+    {MODKEY,                XK_l,               setmfact,           {.f = +0.05}},
 
     // Move window to workspaces
-    {MODKEY | ShiftMask, XK_h, shiftboth, {.i = -1}},
-    {MODKEY | ShiftMask, XK_l, shiftboth, {.i = +1}},
-    {MODKEY | ControlMask, XK_h, shiftswaptags, {.i = -1}},
-    {MODKEY | ControlMask, XK_l, shiftswaptags, {.i = +1}},
+    {MODKEY | ShiftMask,    XK_h,               shiftboth,          {.i = -1}},
+    {MODKEY | ShiftMask,    XK_l,               shiftboth,          {.i = +1}},
+    {MODKEY | ControlMask,  XK_h,               shiftswaptags,      {.i = -1}},
+    {MODKEY | ControlMask,  XK_l,               shiftswaptags,      {.i = +1}},
 
     // Zoom into master
-    {MODKEY | ShiftMask, XK_Return, zoom, {0}},
-    {MODKEY, XK_Tab, view, {0}},
+    {MODKEY | ShiftMask,    XK_Return,          zoom,               {0}},
+    {MODKEY,                XK_Tab,             view,               {0}},
 
     // Toggle modes
-    {MODKEY, XK_t, setlayout, {.v = &layouts[0]}},
-    {MODKEY, XK_f, setlayout, {.v = &layouts[1]}},
-    {MODKEY, XK_m, setlayout, {.v = &layouts[2]}},
-    {MODKEY, XK_n, setlayout, {.v = &layouts[3]}},
-    {MODKEY | ControlMask, XK_space, setlayout, {0}},
-    {MODKEY | ShiftMask, XK_space, togglefloating, {0}},
+    {MODKEY,                XK_t,               setlayout,          {.v = &layouts[0]}},
+    {MODKEY,                XK_f,               setlayout,          {.v = &layouts[1]}},
+    {MODKEY,                XK_m,               setlayout,          {.v = &layouts[2]}},
+    {MODKEY,                XK_n,               setlayout,          {.v = &layouts[3]}},
+    {MODKEY | ControlMask,  XK_space,           setlayout,          {0}},
+    {MODKEY | ShiftMask,    XK_space,           togglefloating,     {0}},
 
     // Show all windows
-    {MODKEY, XK_0, view, {.ui = ~0}},
+    {MODKEY,                XK_0,               view,               {.ui = ~0}},
+
     // Pin window to move active tag
-    {MODKEY | ShiftMask, XK_0, tag, {.ui = ~0}},
+    {MODKEY | ShiftMask,    XK_0,               tag,                {.ui = ~0}},
 
     // Move and focus between tags
-    {MODKEY, XK_comma, focusmon, {.i = -1}},
-    {MODKEY, XK_period, focusmon, {.i = +1}},
-    {MODKEY | ShiftMask, XK_comma, tagmon, {.i = -1}},
-    {MODKEY | ShiftMask, XK_period, tagmon, {.i = +1}},
+    {MODKEY,                XK_comma,           focusmon,           {.i = -1}},
+    {MODKEY,                XK_period,          focusmon,           {.i = +1}},
+    {MODKEY | ShiftMask,    XK_comma,           tagmon,             {.i = -1}},
+    {MODKEY | ShiftMask,    XK_period,          tagmon,             {.i = +1}},
 
     // Quit window
-    {MODKEY | ShiftMask, XK_q, killclient, {0}},
+    {MODKEY | ShiftMask,    XK_q,               killclient,         {0}},
 
+    // Function keys
     {0, XF86MonBrightnessDown, spawn, SHCMD("xbacklight -inc 5")},
     {0, XF86MonBrightnessUp, spawn, SHCMD("xbacklight -dec 5")},
     {0, XF86AudioLowerVolume, spawn, SHCMD("pamixer --decrease 5")},
@@ -180,11 +176,11 @@ static const Key keys[] = {
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
 static const Button buttons[] = {
-    /* click, event mask, button, function, argument */
-    {ClkTagBar, MODKEY, Button1, tag, {0}},
-    {ClkTagBar, MODKEY, Button3, toggletag, {0}},
-    {ClkWinTitle, 0, Button2, zoom, {0}},
-    {ClkStatusText, 0, Button2, spawn, {.v = termcmd}},
+    /* click,       event mask, button,     function,       argument */
+    {ClkTagBar,     MODKEY,     Button1,    tag,            {0}},
+    {ClkTagBar,     MODKEY,     Button3,    toggletag,      {0}},
+    {ClkWinTitle,   0,          Button2,    zoom,           {0}},
+    {ClkStatusText, 0,          Button2,    spawn,          {.v = termcmd}},
     /* placemouse options, choose which feels more natural:
      *    0 - tiled position is relative to mouse cursor
      *    1 - tiled position is relative to window center
@@ -195,11 +191,11 @@ static const Button buttons[] = {
      * to control these separately (i.e. to retain the feature to move a tiled window
      * into a floating position).
      */
-    {ClkClientWin, MODKEY, Button1, moveorplace, {.i = 2}},
-    {ClkClientWin, MODKEY, Button2, togglefloating, {0}},
-    {ClkClientWin, MODKEY, Button3, resizemouse, {0}},
-    {ClkTagBar, 0, Button1, view, {0}},
-    {ClkTagBar, 0, Button3, toggleview, {0}},
-    {ClkTagBar, MODKEY, Button1, tag, {0}},
-    {ClkTagBar, MODKEY, Button3, toggletag, {0}},
+    {ClkClientWin,  MODKEY,     Button1,    moveorplace,    {.i = 2}},
+    {ClkClientWin,  MODKEY,     Button2,    togglefloating, {0}},
+    {ClkClientWin,  MODKEY,     Button3,    resizemouse,    {0}},
+    {ClkTagBar,     0,          Button1,    view,           {0}},
+    {ClkTagBar,     0,          Button3,    toggleview,     {0}},
+    {ClkTagBar,     MODKEY,     Button1,    tag,            {0}},
+    {ClkTagBar,     MODKEY,     Button3,    toggletag,      {0}},
 };
