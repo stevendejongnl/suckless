@@ -4,7 +4,7 @@
 
 /* appearance */
 static const unsigned int borderpx          = 3;    /* border pixel of windows */
-static const unsigned int gappx             = 3;    /* gap pixel between windows */
+static const unsigned int gappx             = 0;    /* gap pixel between windows */
 static const unsigned int snap              = 1;    /* snap pixel */
 static const unsigned int systraypinning    = 0;    /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft     = 0;    /* 0: systray in the right corner, >0: systray on left of status text */
@@ -20,15 +20,17 @@ static const char *fonts[] = {
     "xos4 Terminus:size=10"};
 static const char dmenufont[] = "xos4 Terminus:size=10";
 
-static const char col_text1[]       = "#585273";
-static const char col_text2[]       = "#CBE3E7";
-static const char col_surface1[]    = "#3E3859";
-static const char col_surface2[]    = "#2D2B40";
+static const char col_text1[]       = "#CBE3E7";
+static const char col_text2[]       = "#585273";
+static const char col_surface1[]    = "#2D2B40";
+static const char col_surface2[]    = "#3E3859";
 static const char col_surface3[]    = "#8A889D";
+static const char col_border1[]     = "#7FE9C3";
+static const char col_border2[]     = "#D4BFFF";
 static const char *colors[][3] = {
     /* fg, bg, border */
-    [SchemeNorm]    = {col_text2, col_surface2, col_surface3},
-    [SchemeSel]     = {col_text1, col_surface1, col_surface1},
+    [SchemeNorm]    = {col_text1, col_surface2, col_border2},
+    [SchemeSel]     = {col_text2, col_surface1, col_border1},
 };
 
 /* tagging */
