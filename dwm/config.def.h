@@ -159,21 +159,21 @@ static const Key keys[] = {
     {0, XF86AudioLowerVolume, spawn, SHCMD("pamixer --decrease 5")},
     {0, XF86AudioMute, spawn, SHCMD("pamixer --toggle-mute")},
     {0, XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5")},
-    // XF86AudioMicMute
-    //{0, XF86AudioMicMute, spawning, SHCMD ("pamixer --default-source --toggle-mute")},
-    {0, XF86Messenger, spawn, SHCMD("python /home/stevendejong/scripts/messenger.py")},
-    {0, XF86Favorite, spawn, SHCMD("python /home/stevendejong/scripts/favorites.py")},
-    {0, XF86WLAN, spawn, SHCMD("python /home/stevendejong/scripts/connect_wifi.py stanja")},
+    // {0, XF86AudioMicMute, spawning, SHCMD ("pamixer --default-source --toggle-mute")},
+    // {0, XF86Messenger, spawn, SHCMD("python /home/stevendejong/scripts/messenger.py")},
+    // {0, XF86Favorite, spawn, SHCMD("python /home/stevendejong/scripts/favorites.py")},
+    // {0, XF86WLAN, spawn, SHCMD("python /home/stevendejong/scripts/connect_wifi.py stanja")},
 
     TAGKEYS(XK_1, 0)
-        TAGKEYS(XK_2, 1)
-        TAGKEYS(XK_3, 2)
-        TAGKEYS(XK_4, 3)
-        TAGKEYS(XK_5, 4)
-        TAGKEYS(XK_6, 5)
-        TAGKEYS(XK_7, 6)
-        TAGKEYS(XK_8, 7)
-        TAGKEYS(XK_9, 8)};
+    TAGKEYS(XK_2, 1)
+    TAGKEYS(XK_3, 2)
+    TAGKEYS(XK_4, 3)
+    TAGKEYS(XK_5, 4)
+    TAGKEYS(XK_6, 5)
+    TAGKEYS(XK_7, 6)
+    TAGKEYS(XK_8, 7)
+    TAGKEYS(XK_9, 8)
+};
 
 /* button definitions */
 /* click can be ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle, ClkClientWin, or ClkRootWin */
