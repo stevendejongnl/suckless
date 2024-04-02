@@ -923,6 +923,114 @@ dirtomon(int dir)
     return m;
 }
 
+char *spotifytitle()
+{
+    char buf[1024];
+    char *pathpfx;
+    char *path;
+    char *xdgdatahome;
+    char *home;
+    struct stat sb;
+    char *p;
+    FILE *fp;
+
+    if ((home = getenv("HOME")) == NULL)
+        return;
+
+    xdgdatahome = getenv("XDG_DATA_HOME");
+    if (xdgdatahome != NULL && *xdgdatahome != '\0')
+    {
+        pathpfx = ecalloc(1, strlen(xdgdatahome) + strlen(dwmdir) + 2);
+
+        if (sprintf(pathpfx, "%s/%s", xdgdatahome, dwmdir) <= 0)
+        {
+            free(pathpfx);
+            return;
+        }
+    }
+    else
+    {
+        pathpfx = ecalloc(1, strlen(home) + strlen(localshare) + strlen(dwmdir) + 3);
+
+        if (sprintf(pathpfx, "%s/%s/%s", home, localshare, dwmdir) < 0)
+        {
+            free(pathpfx);
+            return;
+        }
+    }
+
+    if (!(stat(pathpfx, &sb) == 0 && S_ISDIR(sb.st_mode)))
+    {
+        char *pathpfx_new = realloc(pathpfx, strlen(home) + strlen(dwmdir) + 3);
+        if (pathpfx_new == NULL)
+        {
+            free(pathpfx);
+            return;
+        }
+        pathpfx = pathpfx_new;
+
+        if (sprintf(pathpfx, "%s/.%s", home, dwmdir) <= 0)
+        {
+            free(pathpfx);
+            return;
+        }
+    }
+
+    return "Noting to play";
+
+    // add /spotify.sh to pathpfx
+    // path = ecalloc(1, strlen(pathpfx) + 11);
+    // if (sprintf(path, "%s/spotify.sh", pathpfx) <= 0)
+    // {
+    //     free(path);
+    //     free(pathpfx);
+    //     return;
+    // }
+    //
+    // if (!(fp = popen(path, "r")))
+    // {
+    //     warn("popen '%s':", path);
+    //     return NULL;
+    // }
+    // return fp;
+
+    // p = fgets(buf, sizeof(buf) - 1, fp);
+    // if (pclose(fp) < 0)
+    // {
+    //     warn("pclose '%s':", path);
+    //     return NULL;
+    // }
+    //
+    // if (!p)
+    //     return NULL;
+    //
+    // if ((p = strrchr(buf, '\n')))
+    //     p[0] = '\0';
+    //
+    // return buf[0] ? buf : NULL;
+
+    // FILE *fp;
+    // static char title[1024];
+    //
+    // fp = popen("$HOME/.dwm/spotify.sh", "r");
+    // if (fp == NULL)
+    // {
+    //     fprintf(stderr, "Failed to run script\n");
+    //     exit(1);
+    // }
+    //
+    // fgets(title, sizeof(title)-1, fp);
+    // pclose(fp);
+    //
+    // size_t len = strlen(title);
+    // if (len > 0 && title[len-1] == '\n')
+    // {
+    //     title[len-1] = '\0';
+    // }
+
+    // return title;
+}
+
 void drawbar(Monitor *m)
 {
     int x, w, tw = 0, stw = 0;
@@ -970,18 +1078,26 @@ void drawbar(Monitor *m)
 
     if ((w = m->ww - tw - stw - x) > bh)
     {
-        if (m->sel)
-        {
-            drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
-            drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
-            if (m->sel->isfloating)
-                drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
-        }
-        else
-        {
-            drw_setscheme(drw, scheme[SchemeNorm]);
-            drw_rect(drw, x, 0, w, bh, 1, 1);
-        }
+        // if (m->sel)
+        // {
+        //     drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+        //     drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+        //     if (m->sel->isfloating)
+        //         drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+        // }
+        // else
+        // {
+        //     drw_setscheme(drw, scheme[SchemeNorm]);
+        //     drw_rect(drw, x, 0, w, bh, 1, 1);
+        // }
+        // drw_setscheme(drw, scheme[SchemeNorm]);
+        // drw_text(drw, x, 0, w, bh, lrpad /2, "Gekke Gerrit", 0);
+        // if (m->sel->isfloating)
+        //     drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
+        
+        // drw_setscheme(drw, scheme[m == selmon ? SchemeSel : SchemeNorm]);
+        drw_setscheme(drw, scheme[SchemeNorm]);
+        drw_text(drw, x, 0, w, bh, lrpad / 2, spotifytitle(), 0);
     }
     drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 }
