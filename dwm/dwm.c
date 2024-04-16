@@ -923,16 +923,49 @@ dirtomon(int dir)
     return m;
 }
 
+#define MAX_OUTPUT_LENGTH 1024
+
+char *commandscriptexecute(const char *pathpfx)
+{
+    FILE *pipe;
+    char buffer[MAX_OUTPUT_LENGTH];
+    char *output = NULL;
+    size_t output_size =0;
+
+    if ((pipe = popen(pathpfx, "r")) == NULL)
+    {
+        fprintf(stderr, "Failed to run script\n");
+        return NULL;
+    }
+
+    while(fgets(buffer, MAX_OUTPUT_LENGTH, pipe) != NULL)
+    {
+        size_t buffer_len = strlen(buffer);
+        char *new_output = realloc(output, output_size + buffer_len + 1);
+        if (new_output == NULL)
+        {
+            free(output);
+            output = NULL;
+            break;
+        }
+        output = new_output;
+        memcpy(output + output_size, buffer, buffer_len);
+        output_size += buffer_len;
+        output[output_size] = '\0';
+    }
+
+    pclose(pipe);
+
+    return output;
+}
+
 char *spotifytitle()
 {
-    char buf[1024];
     char *pathpfx;
     char *path;
     char *xdgdatahome;
     char *home;
     struct stat sb;
-    char *p;
-    FILE *fp;
 
     if ((home = getenv("HOME")) == NULL)
         return;
@@ -976,59 +1009,24 @@ char *spotifytitle()
         }
     }
 
-    return "Noting to play";
+    size_t pathpfx_len = strlen(pathpfx);
+    size_t commandscript_len = strlen("/commandscript.sh");
+    size_t commandscript_path = pathpfx_len + commandscript_len + 1;
 
-    // add /spotify.sh to pathpfx
-    // path = ecalloc(1, strlen(pathpfx) + 11);
-    // if (sprintf(path, "%s/spotify.sh", pathpfx) <= 0)
-    // {
-    //     free(path);
-    //     free(pathpfx);
-    //     return;
-    // }
-    //
-    // if (!(fp = popen(path, "r")))
-    // {
-    //     warn("popen '%s':", path);
-    //     return NULL;
-    // }
-    // return fp;
+    char *pathpfx_new = realloc(pathpfx, commandscript_path);
 
-    // p = fgets(buf, sizeof(buf) - 1, fp);
-    // if (pclose(fp) < 0)
-    // {
-    //     warn("pclose '%s':", path);
-    //     return NULL;
-    // }
-    //
-    // if (!p)
-    //     return NULL;
-    //
-    // if ((p = strrchr(buf, '\n')))
-    //     p[0] = '\0';
-    //
-    // return buf[0] ? buf : NULL;
+    strcpy(pathpfx_new + pathpfx_len, "/commandscript.sh");
+    pathpfx = pathpfx_new;
 
-    // FILE *fp;
-    // static char title[1024];
-    //
-    // fp = popen("$HOME/.dwm/spotify.sh", "r");
-    // if (fp == NULL)
-    // {
-    //     fprintf(stderr, "Failed to run script\n");
-    //     exit(1);
-    // }
-    //
-    // fgets(title, sizeof(title)-1, fp);
-    // pclose(fp);
-    //
-    // size_t len = strlen(title);
-    // if (len > 0 && title[len-1] == '\n')
-    // {
-    //     title[len-1] = '\0';
-    // }
+    char *output = commandscriptexecute(pathpfx);
+    if (output == NULL)
+    {
+        fprintf(stderr, "Failed to run script\n");
+        return;
+    }
 
-    // return title;
+    free(output);
+    return output;
 }
 
 void drawbar(Monitor *m)
