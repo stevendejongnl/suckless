@@ -41,11 +41,12 @@ static const Rule rules[] = {
      *	WM_CLASS(STRING) = instance, class
      *	WM_NAME(STRING) = title
      */
-    /* class,           instance,   title,  tags mask,  isfloating,     monitor */
-    {"Gcr-prompter",    NULL,       NULL,   ~0,         0,              -1},
-    {"Lxpolkit",        NULL,       NULL,   ~0,         0,              -1},
-    {"1Password",       NULL,       NULL,   ~0,         0,              -1},
-    {"slack",           NULL,       NULL,   1 << 8,     0,              -1},
+    /* class,           instance,   title,                  tags mask,  isfloating,     monitor */
+    {"Gcr-prompter",    NULL,       NULL,                   ~0,         0,              -1},
+    {"Lxpolkit",        NULL,       NULL,                   ~0,         0,              -1},
+    {"1Password",       NULL,       NULL,                   ~0,         0,              -1},
+    {"slack",           NULL,       NULL,                   1 << 8,     0,              -1},
+    {NULL,              NULL,       "Picture in picture",   ~0,         1,              -1},
 };
 
 /* layout(s) */
