@@ -67,14 +67,14 @@ static const char unknown_str[] = "";
  */
 static const struct arg args[] = {
     /* function 		format          	argument */
-    { battery_perc  , "%s％ - "			, "BAT0" },
-    { battery_remaining, "%s - "		, "BAT0" },
+    { battery_state	, "%s"			      , "BAT0" },
+    { battery_perc  , "%s"			      , "BAT0" },
+    { battery_remaining, "%s"		      , "BAT0" },
     { cpu_perc			, "cpu %s％ - "		, NULL },
-    { ram_used			, "ram %s - "		, NULL },
-    { swap_free         , "swap %s - "       , NULL },
-    { run_command		, "%s"				, "/home/stevendejong/.dwm/package-updates.sh" },
-    { run_command		, "%s"				, "/home/stevendejong/.dwm/pipewire.sh" },
-    { run_command		, "%s"				, "/home/stevendejong/.dwm/bluetooth.sh" },
-    // { run_command		, "%s"				, "busctl --user -j get-property io.ntfd /weather openweathermap.strings RenderedTemplate | jq -r .data" },
-    { datetime			, "%s"				, "%F %T" },
+    { ram_used			, "ram %s - "		  , NULL },
+    { swap_free     , "swap %s - "    , NULL },
+    { run_command		, "%s"				    , "/home/stevendejong/.dwm/package-updates.sh" },
+    { run_command		, "%s"				    , "/home/stevendejong/.dwm/pipewire.sh" },
+    { run_command		, "%s"				    , "/home/stevendejong/.dwm/bluetooth.sh" },
+    { datetime			, "%s"				    , "%F %T" },
 };
