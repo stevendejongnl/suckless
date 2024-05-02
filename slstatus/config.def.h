@@ -67,14 +67,5 @@ static const char unknown_str[] = "";
  */
 static const struct arg args[] = {
     /* function 		format          	argument */
-    { battery_state	, "%s"			      , "BAT0" },
-    { battery_perc  , "%s"			      , "BAT0" },
-    { battery_remaining, "%s"		      , "BAT0" },
-    { cpu_perc			, "cpu %s％ - "		, NULL },
-    { ram_used			, "ram %s - "		  , NULL },
-    { swap_free     , "swap %s - "    , NULL },
-    { run_command		, "%s"				    , "/home/stevendejong/.dwm/package-updates.sh" },
-    { run_command		, "%s"				    , "/home/stevendejong/.dwm/pipewire.sh" },
-    { run_command		, "%s"				    , "/home/stevendejong/.dwm/bluetooth.sh" },
-    { datetime			, "%s"				    , "%F %T" },
+    { run_command   , "%s"            , "/home/stevendejong/.dwm/slstatus/slstatus.sh" },
 };
