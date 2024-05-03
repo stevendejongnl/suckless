@@ -16,8 +16,10 @@ static const int topbar                     = 1;    /* 0 means bottom bar */
 static const int focusonwheel               = 0;
 
 static const char *fonts[] = {
-    "UbuntuMono Nerd Font:size=10",
-    "xos4 Terminus:size=10"};
+   "MesloLGS Nerd Font Mono:size=10",
+    // "UbuntuMono Nerd Font:size=10",
+    // "xos4 Terminus:size=10"
+};
 static const char dmenufont[] = "xos4 Terminus:size=10";
 
 static const char col_text1[]       = "#CBE3E7";
