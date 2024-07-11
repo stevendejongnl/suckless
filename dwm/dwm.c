@@ -1997,7 +1997,7 @@ void setcurrentdesktop(void)
 void setdesktopnames(void)
 {
     XTextProperty text;
-    Xutf8TextListToTextProperty(dpy, tags, TAGSLENGTH, XUTF8StringStyle, &text);
+    Xutf8TextListToTextProperty(dpy, (char **)tags, TAGSLENGTH, XUTF8StringStyle, &text);
     XSetTextProperty(dpy, root, &text, netatom[NetDesktopNames]);
 }
 
@@ -2525,7 +2525,7 @@ void updatecurrentdesktop(void)
 {
     long rawdata[] = {selmon->tagset[selmon->seltags]};
     int i = 0;
-    while (*rawdata >> i + 1)
+    while (*rawdata >> (i + 1))
     {
         i++;
     }
@@ -2703,7 +2703,7 @@ void updatesystrayicongeom(Client *i, int w, int h)
     {
         i->w = w = 12;
         i->h = h = 12;
-        int y = (bh - h) / 2;
+        // int y = (bh - h) / 2; // unused var
         XMoveResizeWindow(dpy, i->win, i->x, i->y, i->w, i->h);
     }
 }
