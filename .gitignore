@@ -1,3 +1,5 @@
+.idea
+
 dwm/config.h
 dwm/dwm
 dwm/*.o

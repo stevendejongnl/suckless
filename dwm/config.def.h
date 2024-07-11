@@ -45,6 +45,7 @@ static const Rule rules[] = {
      */
     /* class,           instance,   title,                  tags mask,  isfloating,     monitor */
     {"Gcr-prompter",    NULL,       NULL,                   ~0,         0,              -1},
+    {"Emulator",        NULL,       NULL,                   ~0,         0,              -1},
     {"Lxpolkit",        NULL,       NULL,                   ~0,         0,              -1},
     {"1Password",       NULL,       NULL,                   ~0,         0,              -1},
     {"slack",           NULL,       NULL,                   1 << 8,     0,              -1},
