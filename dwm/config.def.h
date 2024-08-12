@@ -16,9 +16,9 @@ static const int topbar                     = 1;    /* 0 means bottom bar */
 static const int focusonwheel               = 0;
 
 static const char *fonts[] = {
-   "MesloLGS Nerd Font Mono:size=10",
-    // "UbuntuMono Nerd Font:size=10",
-    // "xos4 Terminus:size=10"
+   "UbuntuMono Nerd Font:size=10",
+   "xos4 Terminus:size=10",
+   "MesloLGS Nerd Font Mono:size=10"
 };
 static const char dmenufont[] = "xos4 Terminus:size=10";
 
@@ -92,7 +92,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = {"dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_surface2, "-nf", col_text2, "-sb", col_surface1, "-sf", col_text1, NULL};
-static const char *termcmd[] = {"kitty", "tmux", NULL};
+static const char *termcmd[] = {"alacritty", "-e", "tmux", NULL};
 #include "shift-tools.c"
 
 static const Key keys[] = {
