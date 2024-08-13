@@ -68,9 +68,16 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", "-e", "tmux", NULL };
+#include "shift-tools.c"
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
+	// Move between workspaces
+	{ MODKEY,		                    XK_bracketleft,   shiftviewclients,   { .i = -1 } },
+	{ MODKEY,                       XK_bracketright,  shiftviewclients,   { .i = +1 } },
+	{ MODKEY|ShiftMask,             XK_bracketleft, 	shiftview,          { .i = -1 } },
+	{ MODKEY|ShiftMask,             XK_bracketright,	shiftview,          { .i = +1 } },
+
 	// Spawn applications
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
   { MODKEY,                       XK_space,  spawn,          SHCMD("rofi -show drun") },
@@ -90,6 +97,10 @@ static const Key keys[] = {
 
 	// Increase/decrease master size
 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
+	{ MODKEY|ShiftMask,		XK_h,      shiftboth,      { .i = -1 }	},
+	{ MODKEY|ControlMask,		XK_h,      shiftswaptags,  { .i = -1 }	},
+	{ MODKEY|ControlMask,		XK_l,      shiftswaptags,  { .i = +1 }	},
+	{ MODKEY|ShiftMask,             XK_l,      shiftboth,      { .i = +1 }	},
 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
 
 	// Zoom into master
