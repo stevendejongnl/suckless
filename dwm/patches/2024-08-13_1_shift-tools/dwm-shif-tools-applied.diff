@@ -1,0 +1,175 @@
+diff --git a/dwm/config.def.h b/dwm/config.def.h
+index d438100..10dcf61 100644
+--- a/dwm/config.def.h
++++ b/dwm/config.def.h
+@@ -68,9 +68,16 @@ static const Layout layouts[] = {
+ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
+ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+ static const char *termcmd[]  = { "alacritty", "-e", "tmux", NULL };
++#include "shift-tools.c"
+ 
+ static const Key keys[] = {
+ 	/* modifier                     key        function        argument */
++	// Move between workspaces
++	{ MODKEY,		                    XK_bracketleft,   shiftviewclients,   { .i = -1 } },
++	{ MODKEY,                       XK_bracketright,  shiftviewclients,   { .i = +1 } },
++	{ MODKEY|ShiftMask,             XK_bracketleft, 	shiftview,          { .i = -1 } },
++	{ MODKEY|ShiftMask,             XK_bracketright,	shiftview,          { .i = +1 } },
++
+ 	// Spawn applications
+ 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
+   { MODKEY,                       XK_space,  spawn,          SHCMD("rofi -show drun") },
+@@ -90,6 +97,10 @@ static const Key keys[] = {
+ 
+ 	// Increase/decrease master size
+ 	{ MODKEY,                       XK_h,      setmfact,       {.f = -0.05} },
++	{ MODKEY|ShiftMask,		XK_h,      shiftboth,      { .i = -1 }	},
++	{ MODKEY|ControlMask,		XK_h,      shiftswaptags,  { .i = -1 }	},
++	{ MODKEY|ControlMask,		XK_l,      shiftswaptags,  { .i = +1 }	},
++	{ MODKEY|ShiftMask,             XK_l,      shiftboth,      { .i = +1 }	},
+ 	{ MODKEY,                       XK_l,      setmfact,       {.f = +0.05} },
+ 
+ 	// Zoom into master
+diff --git a/shift-tools.c b/shift-tools.c
+new file mode 100644
+index 0000000..cf130c8
+--- /dev/null
++++ b/shift-tools.c
+@@ -0,0 +1,135 @@
++/* Sends a window to the next/prev tag */
++void
++shifttag(const Arg *arg)
++{
++	Arg shifted;
++	shifted.ui = selmon->tagset[selmon->seltags];
++
++
++	if (arg->i > 0)	/* left circular shift */
++		shifted.ui = ((shifted.ui << arg->i) | (shifted.ui >> (LENGTH(tags) - arg->i)));
++	else		/* right circular shift */
++		shifted.ui = (shifted.ui >> (- arg->i) | shifted.ui << (LENGTH(tags) + arg->i));
++	tag(&shifted);
++}
++/* Sends a window to the next/prev tag that has a client, else it moves it to the next/prev one. */
++void
++shifttagclients(const Arg *arg)
++{
++
++	Arg shifted;
++	Client *c;
++	unsigned int tagmask = 0;
++	shifted.ui = selmon->tagset[selmon->seltags];
++
++	for (c = selmon->clients; c; c = c->next)
++		if (!(c->tags))
++			tagmask = tagmask | c->tags;
++
++
++	if (arg->i > 0)	/* left circular shift */
++		do {
++			shifted.ui = (shifted.ui << arg->i)
++			   | (shifted.ui >> (LENGTH(tags) - arg->i));
++		} while (tagmask && !(shifted.ui & tagmask));
++	else		/* right circular shift */
++		do {
++			shifted.ui = (shifted.ui >> (- arg->i)
++			   | shifted.ui << (LENGTH(tags) + arg->i));
++		} while (tagmask && !(shifted.ui & tagmask));
++	tag(&shifted);
++}
++/* Navigate to the next/prev tag */
++void
++shiftview(const Arg *arg)
++{
++	Arg shifted;
++	shifted.ui = selmon->tagset[selmon->seltags];
++
++	if (arg->i > 0)	/* left circular shift */
++		shifted.ui = (shifted.ui << arg->i) | (shifted.ui >> (LENGTH(tags) - arg->i));
++	else		/* right circular shift */
++		shifted.ui = (shifted.ui >> (- arg->i) | shifted.ui << (LENGTH(tags) + arg->i));
++	view(&shifted);
++}
++/* Navigate to the next/prev tag that has a client, else moves it to the next/prev tag */
++void
++shiftviewclients(const Arg *arg)
++{
++	Arg shifted;
++	Client *c;
++	unsigned int tagmask = 0;
++	shifted.ui = selmon->tagset[selmon->seltags];
++
++	for (c = selmon->clients; c; c = c->next)
++		if (!(c->tags))
++			tagmask = tagmask | c->tags;
++
++
++	if (arg->i > 0)	/* left circular shift */
++		do {
++			shifted.ui = (shifted.ui << arg->i)
++			   | (shifted.ui >> (LENGTH(tags) - arg->i));
++		} while (tagmask && !(shifted.ui & tagmask));
++	else		/* right circular shift */
++		do {
++			shifted.ui = (shifted.ui >> (- arg->i)
++			   | shifted.ui << (LENGTH(tags) + arg->i));
++		} while (tagmask && !(shifted.ui & tagmask));
++	view(&shifted);
++}
++/* move the current active window to the next/prev tag and view it. More like following the window */
++void
++shiftboth(const Arg *arg)
++{
++	Arg shifted;
++	shifted.ui = selmon->tagset[selmon->seltags];
++
++	if (arg->i > 0)	/* left circular shift */
++		shifted.ui = ((shifted.ui << arg->i) | (shifted.ui >> (LENGTH(tags) - arg->i)));
++	else		/* right circular shift */
++		shifted.ui = ((shifted.ui >> (- arg->i) | shifted.ui << (LENGTH(tags) + arg->i)));
++	tag(&shifted);
++	view(&shifted);
++}
++//helper function for shiftswaptags.
++//see: https://github.com/moizifty/DWM-Build/blob/65379c62640788881486401a0d8c79333751b02f/config.h#L48
++void
++swaptags(const Arg *arg)
++{
++	Client *c;
++	unsigned int newtag = arg->ui & TAGMASK;
++	unsigned int curtag = selmon->tagset[selmon->seltags];
++
++	if (newtag == curtag || !curtag || (curtag & (curtag-1)))
++		return;
++
++	for (c = selmon->clients; c != NULL; c = c->next) {
++		if ((c->tags & newtag) || (c->tags & curtag))
++			c->tags ^= curtag ^ newtag;
++
++		if (!c->tags)
++			c->tags = newtag;
++	}
++
++	//move to the swaped tag
++	//selmon->tagset[selmon->seltags] = newtag;
++
++	focus(NULL);
++	arrange(selmon);
++}
++/* swaps "tags" (all the clients) with the next/prev tag. */
++void
++shiftswaptags(const Arg *arg)
++{
++	Arg shifted;
++	shifted.ui = selmon->tagset[selmon->seltags];
++
++	if (arg->i > 0)	/* left circular shift */
++		shifted.ui = ((shifted.ui << arg->i) | (shifted.ui >> (LENGTH(tags) - arg->i)));
++	else		/* right circular shift */
++		shifted.ui = ((shifted.ui >> (- arg->i) | shifted.ui << (LENGTH(tags) + arg->i)));
++	swaptags(&shifted);
++	// uncomment if you also want to "go" (view) the tag where the the clients are going
++	//view(&shifted);
++}
+-- 
+2.32.0
