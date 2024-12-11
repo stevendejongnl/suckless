@@ -61,13 +61,22 @@ static const Layout layouts[] = {
 	{ MODKEY | ShiftMask,               KEY,      tag,            {.ui = 1 << TAG} }, \
 	{ MODKEY | ControlMask | ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
+#define XF86MonBrightnessDown 0x1008ff02
+#define XF86MonBrightnessUp 0x1008ff03
+#define XF86AudioLowerVolume 0x1008ff11
+#define XF86AudioMute 0x1008ff12
+#define XF86AudioRaiseVolume 0x1008ff13
+#define XF86Messenger 0x1008ff8e
+#define XF86Favorite 0x1008ff30
+#define XF86WLAN 0x1008ff95
+
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "alacritty", "-e", "tmux", NULL };
+static const char *termcmd[]  = { "alacritty", "-e", "tmux", "new-session", "-A", "-s", "main", NULL };
 #include "shift-tools.c"
 
 static const Key keys[] = {
@@ -130,6 +139,17 @@ static const Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
 
+	// Function keys
+	{0, XF86MonBrightnessDown, spawn, SHCMD("xbacklight -inc 5")},
+	{0, XF86MonBrightnessUp, spawn, SHCMD("xbacklight -dec 5")},
+	{0, XF86AudioLowerVolume, spawn, SHCMD("pamixer --decrease 5")},
+	{0, XF86AudioMute, spawn, SHCMD("pamixer --toggle-mute")},
+	{0, XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5")},
+	// {0, XF86AudioMicMute, spawning, SHCMD ("pamixer --default-source --toggle-mute")},
+	// {0, XF86Messenger, spawn, SHCMD("")},
+	// {0, XF86Favorite, spawn, SHCMD("")},
+	// {0, XF86WLAN, spawn, SHCMD("")},
+  
 	// Tag keys
 	TAGKEYS(                        XK_1,                      0)
 	TAGKEYS(                        XK_2,                      1)
@@ -142,7 +162,7 @@ static const Key keys[] = {
 	TAGKEYS(                        XK_9,                      8)
 
 	// Quit DWM
-	// { MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+	{ MODKEY|ShiftMask|ControlMask, XK_q,      quit,           {0} },
 };
 
 /* button definitions */
