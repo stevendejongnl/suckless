@@ -1,0 +1,102 @@
+diff --git a/dwm/config.def.h b/dwm/config.def.h
+index e502b24..26fba00 100644
+--- a/dwm/config.def.h
++++ b/dwm/config.def.h
+@@ -172,7 +172,8 @@ static const Key keys[] = {
+ 	TAGKEYS(                        XK_9,                      8)
+ 
+ 	// Quit DWM
+-	{ MODKEY|ShiftMask|ControlMask, XK_q,      quit,           {0} },
++	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
++	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {1} },
+ };
+ 
+ /* button definitions */
+diff --git a/dwm/dwm.1 b/dwm/dwm.1
+index 86e73f9..0f3a6ba 100644
+--- a/dwm/dwm.1
++++ b/dwm/dwm.1
+@@ -150,6 +150,9 @@ Add/remove all windows with nth tag to/from the view.
+ .TP
+ .B Mod1\-Shift\-q
+ Quit dwm.
++.TP
++.B Mod1\-Control\-Shift\-q
++Restart dwm.
+ .SS Mouse commands
+ .TP
+ .B Mod1\-Button1
+@@ -178,6 +181,13 @@ This file is started before any autostart.sh; dwm waits for its termination.
+ .SH CUSTOMIZATION
+ dwm is customized by creating a custom config.h and (re)compiling the source
+ code. This keeps it fast, secure and simple.
++.SH SIGNALS
++.TP
++.B SIGHUP - 1
++Restart the dwm process.
++.TP
++.B SIGTERM - 15
++Cleanly terminate the dwm process.
+ .SH SEE ALSO
+ .BR dmenu (1),
+ .BR st (1)
+diff --git a/dwm/dwm.c b/dwm/dwm.c
+index d788bd0..c2f7bb9 100644
+--- a/dwm/dwm.c
++++ b/dwm/dwm.c
+@@ -232,6 +232,8 @@ static void setmfact(const Arg *arg);
+ static void setup(void);
+ static void seturgent(Client *c, int urg);
+ static void showhide(Client *c);
++static void sighup(int unused);
++static void sigterm(int unused);
+ static void spawn(const Arg *arg);
+ static Monitor *systraytomon(Monitor *m);
+ static void tag(const Arg *arg);
+@@ -296,6 +298,7 @@ static void (*handler[LASTEvent]) (XEvent *) = {
+ 	[UnmapNotify] = unmapnotify
+ };
+ static Atom wmatom[WMLast], netatom[NetLast], xatom[XLast];
++static int restart = 0;
+ static int running = 1;
+ static Cur *cursor[CurLast];
+ static Clr **scheme;
+@@ -1859,6 +1862,9 @@ setup(void)
+ 	/* clean up any zombies (inherited from .xinitrc etc) immediately */
+ 	while (waitpid(-1, NULL, WNOHANG) > 0);
+ 
++	signal(SIGHUP, sighup);
++	signal(SIGTERM, sigterm);
++
+ 	/* init screen */
+ 	screen = DefaultScreen(dpy);
+ 	sw = DisplayWidth(dpy, screen);
+@@ -1959,6 +1965,20 @@ showhide(Client *c)
+ 	}
+ }
+ 
++void
++sighup(int unused)
++{
++	Arg a = {.i = 1};
++	quit(&a);
++}
++
++void
++sigterm(int unused)
++{
++	Arg a = {.i = 0};
++	quit(&a);
++}
++
+ void
+ spawn(const Arg *arg)
+ {
+@@ -2694,6 +2714,7 @@ main(int argc, char *argv[])
+ 	restoreSession();
+ 	runautostart();
+ 	run();
++	if(restart) execvp(argv[0], argv);
+ 	cleanup();
+ 	XCloseDisplay(dpy);
+ 	return EXIT_SUCCESS;
