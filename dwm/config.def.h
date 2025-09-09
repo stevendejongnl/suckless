@@ -34,18 +34,22 @@ static const char *colors[][3]      = {
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+#define TAG_MASK(n) (1 << ((n) - 1))
+#define TAG_ALL (~0)
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class      instance    title       tags mask     isfloating   monitor */
-    {"Gcr-prompter",    NULL,       NULL,                   ~0,         0,              -1},
-    {"Emulator",        NULL,       NULL,                   ~0,         0,              -1},
-    {"Lxpolkit",        NULL,       NULL,                   ~0,         0,              -1},
-    {"1Password",       NULL,       NULL,                   ~0,         0,              -1},
-    {"slack",           NULL,       NULL,                   1 << 8,     0,              -1},
-    {NULL,              NULL,       "Picture in picture",   ~0,         1,              -1},
+	/* class              instance    title                   tags mask        isfloating      monitor */
+    {"Gcr-prompter",    NULL,       NULL,                   TAG_ALL,         0,              -1},
+    {"Emulator",        NULL,       NULL,                   TAG_ALL,         0,              -1},
+    {"Lxpolkit",        NULL,       NULL,                   TAG_ALL,         0,              -1},
+    {"1Password",       NULL,       NULL,                   TAG_ALL,         0,              -1},
+    {"Slack",           NULL,       NULL,                   TAG_MASK(1),     0,               1},
+    {"Wasistlos",       NULL,       NULL,                   TAG_MASK(1),     0,               1},
+    {"Moonlight",       NULL,       NULL,                   TAG_MASK(9),     0,               0},
+    {NULL,              NULL,       "Picture in picture",   TAG_ALL,         1,              -1},
 };
 
 /* layout(s) */
@@ -173,6 +177,7 @@ static const Key keys[] = {
 
 	// Quit DWM
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
+  // Restart DWM
 	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {1} },
 };
 
