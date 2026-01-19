@@ -243,6 +243,7 @@ static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
 static void togglefloating(const Arg *arg);
 static void togglescratch(const Arg *arg);
+static void sigstatusbar(const Arg *arg);
 static void toggletag(const Arg *arg);
 static void toggleview(const Arg *arg);
 static void unfocus(Client *c, int setfocus);
@@ -278,6 +279,9 @@ static const char broken[] = "broken";
 static const char dwmdir[] = "dwm";
 static const char localshare[] = ".local/share";
 static char stext[256];
+static int statusw;
+static int statussig;
+static pid_t statuspid = -1;
 static int screen;
 static int sw, sh;	     /* X display screen geometry width, height */
 static int bh;		     /* bar height */
@@ -536,9 +540,24 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - (int)TEXTW(stext) - getsystraywidth())
+		else if (ev->x > selmon->ww - statusw) {
+			char *text, *s, ch;
+			x = selmon->ww - statusw;
 			click = ClkStatusText;
-		else
+			statussig = 0;
+			for (text = s = stext; *s && x <= ev->x; s++) {
+				if ((unsigned char)(*s) >= 0x10 && (unsigned char)(*s) <= 0x1f) {
+					ch = *s;
+					*s = '\0';
+					x += TEXTW(text) - lrpad;
+					*s = ch;
+					text = s + 1;
+					if (x >= ev->x)
+						break;
+					statussig = ch;
+				}
+			}
+		} else
 			click = ClkWinTitle;
 	} else if ((c = wintoclient(ev->window))) {
 		if (focusonwheel || (ev->button != Button4 && ev->button != Button5))
@@ -893,7 +912,7 @@ drawbar(Monitor *m)
 
 		/* Parse and render status text with embedded color codes */
 		while (1) {
-			/* Check if current byte is a color code (0x01-0x0C) */
+			/* Check if current byte is a color code (0x01-0x0C) or statuscmd (0x10-0x1F) */
 			if ((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) {
 				ctmp = *ts;
 				*ts = '\0'; /* temporarily terminate string */
@@ -915,6 +934,22 @@ drawbar(Monitor *m)
 				}
 
 				tp = ++ts; /* move text pointer past escape code */
+				continue;
+			}
+
+			/* Skip statuscmd bytes (0x10-0x1F) - they're used for click detection, not rendering */
+			if ((unsigned char)*ts >= 0x10 && (unsigned char)*ts <= 0x1f) {
+				ctmp = *ts;
+				*ts = '\0'; /* temporarily terminate string */
+
+				/* Draw text segment up to this point */
+				if (tp < ts) {
+					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, lrpad / 2 - 2, tp, 0);
+					tx += TEXTW(tp) - lrpad;
+				}
+
+				*ts = ctmp; /* restore character */
+				tp = ++ts; /* move text pointer past statuscmd byte */
 				continue;
 			}
 
@@ -1094,6 +1129,30 @@ getsystraywidth()
 	if(showsystray)
 		for(i = systray->icons; i; w += i->w + systrayspacing, i = i->next) ;
 	return w ? w + systrayspacing : 1;
+}
+
+pid_t
+getstatusbarpid()
+{
+	char buf[32], *str = buf, *c;
+	FILE *fp;
+
+	if (statuspid > 0) {
+		snprintf(buf, sizeof(buf), "/proc/%u/cmdline", statuspid);
+		if ((fp = fopen(buf, "r"))) {
+			fgets(buf, sizeof(buf), fp);
+			while ((c = strchr(str, '/')))
+				str = c + 1;
+			fclose(fp);
+			if (!strcmp(str, "statusbar.sh") || !strcmp(str, "dwmblocks"))
+				return statuspid;
+		}
+	}
+	if (!(fp = popen("pidof -s statusbar.sh || pidof -s dwmblocks 2>/dev/null", "r")))
+		return -1;
+	fgets(buf, sizeof(buf), fp);
+	pclose(fp);
+	return strtol(buf, NULL, 10);
 }
 
 int
@@ -2200,6 +2259,20 @@ togglescratch(const Arg *arg)
 }
 
 void
+sigstatusbar(const Arg *arg)
+{
+	union sigval sv;
+
+	if (!statussig)
+		return;
+	sv.sival_int = arg->i;
+	if ((statuspid = getstatusbarpid()) <= 0)
+		return;
+
+	sigqueue(statuspid, SIGRTMIN + statussig, sv);
+}
+
+void
 toggletag(const Arg *arg)
 {
 	unsigned int newtags;
@@ -2505,8 +2578,31 @@ updatesizehints(Client *c)
 void
 updatestatus(void)
 {
-	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
+	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext))) {
 		strcpy(stext, "dwm-"VERSION);
+		statusw = TEXTW(stext) - lrpad + 2;
+	} else {
+		/* Calculate status bar width accounting for statuscmd bytes */
+		char *text, *s, ch;
+		statusw = 0;
+		for (text = s = stext; *s; s++) {
+			if ((unsigned char)(*s) >= 0x10 && (unsigned char)(*s) <= 0x1f) {
+				ch = *s;
+				*s = '\0';
+				statusw += TEXTW(text) - lrpad;
+				*s = ch;
+				text = s + 1;
+			} else if ((unsigned char)(*s) >= 0x01 && (unsigned char)(*s) <= 0x0C) {
+				/* statuscolors bytes are also not rendered */
+				ch = *s;
+				*s = '\0';
+				statusw += TEXTW(text) - lrpad;
+				*s = ch;
+				text = s + 1;
+			}
+		}
+		statusw += TEXTW(text) - lrpad + 2;
+	}
 	drawbar(selmon);
 	updatesystray();
 }
