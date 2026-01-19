@@ -77,6 +77,13 @@ static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
+/* Gaps */
+static const unsigned int gappih = 10;	/* horiz inner gap between windows */
+static const unsigned int gappiv = 10;	/* vert inner gap between windows */
+static const unsigned int gappoh = 10;	/* horiz outer gap between windows and screen edge */
+static const unsigned int gappov = 10;	/* vert outer gap between windows and screen edge */
+static const int smartgaps = 0;		/* 1 means no outer gap when there is only one window */
+
 static const Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },	 /* first entry is default */
@@ -105,6 +112,7 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 #include "movestack.c"
+#include "vanitygaps.c"
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
@@ -185,6 +193,16 @@ static const Key keys[] = {
 	//{ MODKEY,			  XK_space,  setlayout,	     {0} },
 	{ MODKEY|ControlMask,		XK_space,  setlayout,	   {0} },
 	{ MODKEY|ShiftMask,		XK_space,  togglefloating, {0} },
+
+	// Manage gaps
+	{ MODKEY|Mod1Mask,		XK_u,	   incrgaps,	   {.i = +1} },
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_u,	   incrgaps,	   {.i = -1} },
+	{ MODKEY|Mod1Mask,		XK_i,	   incrigaps,	   {.i = +1} },
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_i,	   incrigaps,	   {.i = -1} },
+	{ MODKEY|Mod1Mask,		XK_o,	   incrogaps,	   {.i = +1} },
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_o,	   incrogaps,	   {.i = -1} },
+	{ MODKEY|Mod1Mask,		XK_6,	   togglegaps,	   {0} },
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_6,	   defaultgaps,	   {0} },
 
 	// Show all windows
 	{ MODKEY,			XK_0,	   view,	   {.ui = ~0 } },
