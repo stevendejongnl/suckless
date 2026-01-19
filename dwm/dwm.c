@@ -323,6 +323,48 @@ struct Pertag {
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
+/* Calculate status bar width excluding control codes (0x01-0x0C) that don't render */
+static unsigned int
+calculate_status_width(const char *text)
+{
+	const char *ts = text;
+	const char *tp = text;
+	unsigned int tw = 0;
+	char seg[512];
+	size_t seglen;
+
+	while (*ts) {
+		/* Check if current byte is a color code (0x01-0x0C) */
+		if ((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) {
+			/* Measure text segment up to this point */
+			if (tp < ts) {
+				seglen = ts - tp;
+				if (seglen < sizeof(seg)) {
+					strncpy(seg, tp, seglen);
+					seg[seglen] = '\0';
+					tw += drw_fontset_getwidth(drw, seg);
+				}
+			}
+			tp = ++ts; /* move text pointer past escape code */
+			continue;
+		}
+		ts++;
+	}
+
+	/* Measure final segment */
+	if (tp < ts) {
+		seglen = ts - tp;
+		if (seglen < sizeof(seg)) {
+			strncpy(seg, tp, seglen);
+			seg[seglen] = '\0';
+			tw += drw_fontset_getwidth(drw, seg);
+		}
+	}
+
+	/* drw_fontset_getwidth() does not include lrpad, add it once for total width */
+	return tw + lrpad;
+}
+
 /* function implementations */
 void
 applyrules(Client *c)
@@ -844,7 +886,7 @@ drawbar(Monitor *m)
 		char ctmp;	       /* temporary char storage */
 
 		drw_setscheme(drw, scheme[SchemeStatusNorm]); /* default color */
-		tw = TEXTW(stext) - lrpad / 2 + 2;
+		tw = calculate_status_width(stext) - lrpad / 2 + 2;
 
 		/* Parse and render status text with embedded color codes */
 		while (1) {
