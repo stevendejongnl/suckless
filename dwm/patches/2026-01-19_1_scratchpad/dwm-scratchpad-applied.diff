@@ -1,0 +1,106 @@
+diff --git a/dwm/config.def.h b/dwm/config.def.h
+index 12284cc..7352c0d 100644
+--- a/dwm/config.def.h
++++ b/dwm/config.def.h
+@@ -59,6 +59,7 @@ static const Rule rules[] = {
+ 	 *	WM_NAME(STRING) = title
+ 	 */
+ 	/* class	      instance	  title			  tags mask	   isfloating	   monitor */
++    {scratchpadname,    NULL,      NULL,           TAG_ALL,         1,           -1},
+     {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+     {"Emulator",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+@@ -108,6 +109,12 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn()
+ static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+ static const char *termcmd[]  = { "alacritty", "-e", "tmux", "new-session", "-A", "-s", "main", NULL };
+ static const char *termtwocmd[]	 = { "alacritty", "-e", "tmux", NULL };
++static const char scratchpadname[] = "scratchpad";
++static const char *scratchpadcmd[] = {
++	"alacritty", "--class", scratchpadname,
++	"-e", "tmux", "new-session", "-A", "-s", "scratch",
++	NULL
++};
+ static const char *helpoverlaycmd[] = {
+     "/bin/sh", "-c",
+     "cd /home/stevendejong/workspace/personal/dwm-hotkey-overlay && /usr/bin/python3 -m dwm_hotkey_overlay > /tmp/dwm-overlay.log 2>&1 &",
+@@ -131,6 +138,7 @@ static const Key keys[] = {
+     { MODKEY|Mod1Mask,		    XK_space,  spawn,	       SHCMD("rofi -show window") },
+ 	{ MODKEY,			XK_Return, spawn,	   {.v = termcmd } },
+ 	{ MODKEY|Mod1Mask,		XK_Return, spawn,	   {.v = termtwocmd } },
++	{ MODKEY,			XK_grave,  togglescratch,  {.v = scratchpadcmd } },
+ 
+ 	// Help overlay
+ 	{ ControlMask,			XK_h,	   spawn,	   {.v = helpoverlaycmd } },
+diff --git a/dwm/dwm.c b/dwm/dwm.c
+index 30070e5..09e3e99 100644
+--- a/dwm/dwm.c
++++ b/dwm/dwm.c
+@@ -242,6 +242,7 @@ static void tagmon(const Arg *arg);
+ static void tile(Monitor *m);
+ static void togglebar(const Arg *arg);
+ static void togglefloating(const Arg *arg);
++static void togglescratch(const Arg *arg);
+ static void toggletag(const Arg *arg);
+ static void toggleview(const Arg *arg);
+ static void unfocus(Client *c, int setfocus);
+@@ -320,6 +321,8 @@ struct Pertag {
+ 	int showbars[LENGTH(tags) + 1]; /* display bar for the current tag */
+ };
+ 
++static unsigned int scratchtag = 1 << LENGTH(tags);
++
+ /* compile-time check if all tags fit into an unsigned int bit array. */
+ struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
+ 
+@@ -1278,6 +1281,14 @@ manage(Window w, XWindowAttributes *wa)
+ 	c->y = MAX(c->y, c->mon->wy);
+ 	c->bw = borderpx;
+ 
++	selmon->tagset[selmon->seltags] &= ~scratchtag;
++	if (!strcmp(c->name, scratchpadname)) {
++		c->mon->tagset[c->mon->seltags] |= c->tags = scratchtag;
++		c->isfloating = True;
++		c->x = c->mon->wx + (c->mon->ww / 2 - WIDTH(c) / 2);
++		c->y = c->mon->wy + (c->mon->wh / 2 - HEIGHT(c) / 2);
++	}
++
+ 	wc.border_width = c->bw;
+ 	XConfigureWindow(dpy, w, CWBorderWidth, &wc);
+ 	XSetWindowBorder(dpy, w, scheme[SchemeNorm][ColBorder].pixel);
+@@ -2070,6 +2081,7 @@ spawn(const Arg *arg)
+ 
+ 	if (arg->v == dmenucmd)
+ 		dmenumon[0] = '0' + selmon->num;
++	selmon->tagset[selmon->seltags] &= ~scratchtag;
+ 	if (fork() == 0) {
+ 		if (dpy)
+ 			close(ConnectionNumber(dpy));
+@@ -2165,6 +2177,28 @@ togglefloating(const Arg *arg)
+ 	arrange(selmon);
+ }
+ 
++void
++togglescratch(const Arg *arg)
++{
++	Client *c;
++	unsigned int found = 0;
++
++	for (c = selmon->clients; c && !(found = c->tags & scratchtag); c = c->next);
++	if (found) {
++		unsigned int newtagset = selmon->tagset[selmon->seltags] ^ scratchtag;
++		if (newtagset) {
++			selmon->tagset[selmon->seltags] = newtagset;
++			focus(NULL);
++			arrange(selmon);
++		}
++		if (ISVISIBLE(c)) {
++			focus(c);
++			restack(selmon);
++		}
++	} else
++		spawn(arg);
++}
++
+ void
+ toggletag(const Arg *arg)
+ {

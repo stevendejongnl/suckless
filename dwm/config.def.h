@@ -59,6 +59,7 @@ static const Rule rules[] = {
 	 *	WM_NAME(STRING) = title
 	 */
 	/* class	      instance	  title			  tags mask	   isfloating	   monitor */
+    {scratchpadname,    NULL,      NULL,           TAG_ALL,         1,           -1},
     {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
     {"Emulator",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
@@ -108,6 +109,12 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", "-e", "tmux", "new-session", "-A", "-s", "main", NULL };
 static const char *termtwocmd[]	 = { "alacritty", "-e", "tmux", NULL };
+static const char scratchpadname[] = "scratchpad";
+static const char *scratchpadcmd[] = {
+	"alacritty", "--class", scratchpadname,
+	"-e", "tmux", "new-session", "-A", "-s", "scratch",
+	NULL
+};
 static const char *helpoverlaycmd[] = {
     "/bin/sh", "-c",
     "cd /home/stevendejong/workspace/personal/dwm-hotkey-overlay && /usr/bin/python3 -m dwm_hotkey_overlay > /tmp/dwm-overlay.log 2>&1 &",
@@ -131,6 +138,7 @@ static const Key keys[] = {
     { MODKEY|Mod1Mask,		    XK_space,  spawn,	       SHCMD("rofi -show window") },
 	{ MODKEY,			XK_Return, spawn,	   {.v = termcmd } },
 	{ MODKEY|Mod1Mask,		XK_Return, spawn,	   {.v = termtwocmd } },
+	{ MODKEY,			XK_grave,  togglescratch,  {.v = scratchpadcmd } },
 
 	// Help overlay
 	{ ControlMask,			XK_h,	   spawn,	   {.v = helpoverlaycmd } },
