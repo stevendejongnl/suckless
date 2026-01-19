@@ -52,6 +52,7 @@ static const char *colors[][3]	    = {
 
 /* tagging */
 static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char scratchpadname[] = "scratchpad";
 
 #define TAG_MASK(n) (1 << ((n) - 1))
 #define TAG_ALL (~0)
@@ -79,6 +80,9 @@ static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] 
 static const int nmaster     = 1;    /* number of clients in master area */
 static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
+
+#define FORCE_VSPLIT 1	/* nrowgrid layout: force two clients to always split vertically */
+#define PERTAG_PATCH 0	/* vanitygaps uses global gaps (Pertag struct not available at compile time) */
 
 /* Gaps */
 static const unsigned int gappih = 10;	/* horiz inner gap between windows */
@@ -122,7 +126,6 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", "-e", "tmux", "new-session", "-A", "-s", "main", NULL };
 static const char *termtwocmd[]	 = { "alacritty", "-e", "tmux", NULL };
-static const char scratchpadname[] = "scratchpad";
 static const char *scratchpadcmd[] = {
 	"alacritty", "--class", scratchpadname,
 	"-e", "tmux", "new-session", "-A", "-s", "scratch",
