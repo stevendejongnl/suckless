@@ -49,6 +49,7 @@ static const Rule rules[] = {
     {"Slack",           NULL,       NULL,                   TAG_MASK(1),     0,               1},
     {"Wasistlos",       NULL,       NULL,                   TAG_MASK(1),     0,               1},
     {"Moonlight",       NULL,       NULL,                   TAG_MASK(9),     0,               0},
+    {NULL,              NULL,       "DWM Overlay",          TAG_ALL,         1,              -1},
     {NULL,              NULL,       "Picture in picture",   TAG_ALL,         1,              -1},
 };
 
@@ -90,22 +91,35 @@ static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() 
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 static const char *termcmd[]  = { "alacritty", "-e", "tmux", "new-session", "-A", "-s", "main", NULL };
 static const char *termtwocmd[]  = { "alacritty", "-e", "tmux", NULL };
+static const char *helpoverlaycmd[] = {
+    "/bin/sh", "-c",
+    "cd /home/stevendejong/workspace/personal/dwm-hotkey-overlay && /usr/bin/python3 -m dwm_hotkey_overlay > /tmp/dwm-overlay.log 2>&1 &",
+    NULL
+};
+
+static const char *notifcmd[] = { "/home/stevendejong/.local/bin/notification-center.sh", NULL };
 #include "shift-tools.c"
 
 static const Key keys[] = {
 	/* modifier                     key        function        argument */
 	// Move between workspaces
-	{ MODKEY,		                    XK_bracketleft,   shiftviewclients,   { .i = -1 } },
+	{ MODKEY,		                XK_bracketleft,   shiftviewclients,   { .i = -1 } },
 	{ MODKEY,                       XK_bracketright,  shiftviewclients,   { .i = +1 } },
 	{ MODKEY|ShiftMask,             XK_bracketleft, 	shiftview,          { .i = -1 } },
 	{ MODKEY|ShiftMask,             XK_bracketright,	shiftview,          { .i = +1 } },
 
 	// Spawn applications
 	{ MODKEY,                       XK_p,      spawn,          {.v = dmenucmd } },
-  { MODKEY,                       XK_space,  spawn,          SHCMD("rofi -show drun") },
-  { MODKEY|Mod1Mask,              XK_space,  spawn,          SHCMD("rofi -show window") },
+    { MODKEY,                       XK_space,  spawn,          SHCMD("rofi -show drun") },
+    { MODKEY|Mod1Mask,              XK_space,  spawn,          SHCMD("rofi -show window") },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
 	{ MODKEY|Mod1Mask,              XK_Return, spawn,          {.v = termtwocmd } },
+
+	// Help overlay
+	{ ControlMask,                  XK_h,      spawn,          {.v = helpoverlaycmd } },
+
+  // Notification center
+  { MODKEY,                       XK_n,      spawn,          {.v = notifcmd } },
 
 	// Toggle bar
 	{ MODKEY,                       XK_b,      togglebar,      {0} },
@@ -177,7 +191,7 @@ static const Key keys[] = {
 
 	// Quit DWM
 	{ MODKEY|ShiftMask,             XK_q,      quit,           {0} },
-  // Restart DWM
+    // Restart DWM
 	{ MODKEY|ControlMask|ShiftMask, XK_q,      quit,           {1} },
 };
 
