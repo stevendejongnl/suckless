@@ -73,7 +73,8 @@
 
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
-enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm }; /* color schemes */
+enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm,
+       SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -837,9 +838,50 @@ drawbar(Monitor *m)
 
 	/* draw status first so it can be overdrawn by tags later */
 	if (m == selmon) { /* status is only drawn on selected monitor */
-		drw_setscheme(drw, scheme[SchemeStatus]);
-		tw = TEXTW(stext) - lrpad / 2 + 2; /* 2px extra right padding */
-		drw_text(drw, m->ww - tw - stw, 0, tw, bh, lrpad / 2 - 2, stext, 0);
+		char *ts = stext;      /* pointer to scan through stext */
+		char *tp = stext;      /* pointer to start of current text segment */
+		int tx = 0;            /* x offset for current segment */
+		char ctmp;             /* temporary char storage */
+
+		drw_setscheme(drw, scheme[SchemeStatusNorm]); /* default color */
+		tw = TEXTW(stext) - lrpad / 2 + 2;
+
+		/* Parse and render status text with embedded color codes */
+		while (1) {
+			/* Check if current byte is a color code (0x01-0x0C) */
+			if ((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) {
+				ctmp = *ts;
+				*ts = '\0'; /* temporarily terminate string */
+
+				/* Draw text segment up to this point */
+				if (tp < ts) {
+					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, lrpad / 2 - 2, tp, 0);
+					tx += TEXTW(tp) - lrpad;
+				}
+
+				*ts = ctmp; /* restore character */
+
+				/* Set color scheme based on escape code */
+				if (ctmp == 0x01) {
+					drw_setscheme(drw, scheme[SchemeStatusNorm]); /* reset to default */
+				} else if (ctmp >= 0x07 && ctmp <= 0x0C) {
+					/* Map 0x07-0x0C to SchemeStatusNorm through SchemeStatusSuccess */
+					drw_setscheme(drw, scheme[SchemeStatusNorm + (ctmp - 0x07)]);
+				}
+
+				tp = ++ts; /* move text pointer past escape code */
+				continue;
+			}
+
+			if (*ts == '\0') {
+				/* Draw final segment */
+				if (tp < ts)
+					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, lrpad / 2 - 2, tp, 0);
+				break;
+			}
+
+			ts++;
+		}
 	}
 
 	resizebarwin(m);

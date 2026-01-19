@@ -20,6 +20,13 @@ static const char col_gray2[]       = "#444444";
 static const char col_gray3[]       = "#bbbbbb";
 static const char col_gray4[]       = "#eeeeee";
 static const char col_cyan[]        = "#EF476F";
+/* Status bar colors */
+static const char col_status_norm[]     = "#bbbbbb";  /* Default status text */
+static const char col_status_low[]      = "#1B9AAA";  /* Low/info - cyan/teal */
+static const char col_status_medium[]   = "#FFC43D";  /* Medium - yellow */
+static const char col_status_high[]     = "#FF6B35";  /* High/warning - orange */
+static const char col_status_critical[] = "#EF476F";  /* Critical - red/pink */
+static const char col_status_success[]  = "#06D6A0";  /* Success - green */
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
@@ -29,6 +36,13 @@ static const char *colors[][3]      = {
 	[SchemeTagsNorm]  = { col_gray3, col_gray1,  "#1B9AAA"  }, // Tagbar left unselected {text,background,not used but cannot be empty}
 	[SchemeInfoSel]  = { col_gray4, col_cyan,  "#EF476F"  }, // infobar middle  selected {text,background,not used but cannot be empty}
 	[SchemeInfoNorm]  = { col_gray3, col_gray1,  "#1B9AAA"  }, // infobar middle  unselected {text,background,not used but cannot be empty}
+	/* Status bar color schemes */
+	[SchemeStatusNorm]     = { col_status_norm,     col_gray1, col_gray2 },
+	[SchemeStatusLow]      = { col_status_low,      col_gray1, col_gray2 },
+	[SchemeStatusMedium]   = { col_status_medium,   col_gray1, col_gray2 },
+	[SchemeStatusHigh]     = { col_status_high,     col_gray1, col_gray2 },
+	[SchemeStatusCritical] = { col_status_critical, col_gray1, col_gray2 },
+	[SchemeStatusSuccess]  = { col_status_success,  col_gray1, col_gray2 },
 };
 
 /* tagging */
