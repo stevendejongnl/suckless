@@ -1,6 +1,6 @@
-.PHONY: dwm dmenu slock all
+.PHONY: dwm dmenu slock overlay all
 
-all: dwm dmenu slock
+all: dwm dmenu slock overlay
 
 dwm:
 	rm -rf ./dwm/config.h
@@ -13,4 +13,9 @@ dmenu:
 slock:
 	rm -rf ./slock/config.h
 	sudo make -C ./slock clean install
+
+overlay:
+	cd ../../personal/dwm-hotkey-overlay-rs && \
+	cargo build --release && \
+	sudo cp target/release/dwm-hotkey-overlay /usr/local/bin/
 

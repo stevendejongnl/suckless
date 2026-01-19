@@ -132,8 +132,7 @@ static const char *scratchpadcmd[] = {
 	NULL
 };
 static const char *helpoverlaycmd[] = {
-    "/bin/sh", "-c",
-    "cd /home/stevendejong/workspace/personal/dwm-hotkey-overlay && /usr/bin/python3 -m dwm_hotkey_overlay > /tmp/dwm-overlay.log 2>&1 &",
+    "/usr/local/bin/dwm-hotkey-overlay",
     NULL
 };
 
