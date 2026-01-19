@@ -46,29 +46,29 @@
 #include "util.h"
 
 /* macros */
-#define BUTTONMASK              (ButtonPressMask|ButtonReleaseMask)
-#define CLEANMASK(mask)         (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
-#define INTERSECT(x,y,w,h,m)    (MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
-                               * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
-#define ISVISIBLE(C)            ((C->tags & C->mon->tagset[C->mon->seltags]))
-#define LENGTH(X)               (sizeof X / sizeof X[0])
-#define MOUSEMASK               (BUTTONMASK|PointerMotionMask)
-#define WIDTH(X)                ((X)->w + 2 * (X)->bw)
-#define HEIGHT(X)               ((X)->h + 2 * (X)->bw)
-#define TAGMASK                 ((1 << LENGTH(tags)) - 1)
-#define TEXTW(X)                (drw_fontset_getwidth(drw, (X)) + lrpad)
+#define BUTTONMASK		(ButtonPressMask|ButtonReleaseMask)
+#define CLEANMASK(mask)		(mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
+#define INTERSECT(x,y,w,h,m)	(MAX(0, MIN((x)+(w),(m)->wx+(m)->ww) - MAX((x),(m)->wx)) \
+			       * MAX(0, MIN((y)+(h),(m)->wy+(m)->wh) - MAX((y),(m)->wy)))
+#define ISVISIBLE(C)		((C->tags & C->mon->tagset[C->mon->seltags]))
+#define LENGTH(X)		(sizeof X / sizeof X[0])
+#define MOUSEMASK		(BUTTONMASK|PointerMotionMask)
+#define WIDTH(X)		((X)->w + 2 * (X)->bw)
+#define HEIGHT(X)		((X)->h + 2 * (X)->bw)
+#define TAGMASK			((1 << LENGTH(tags)) - 1)
+#define TEXTW(X)		(drw_fontset_getwidth(drw, (X)) + lrpad)
 
 #define SYSTEM_TRAY_REQUEST_DOCK    0
 /* XEMBED messages */
-#define XEMBED_EMBEDDED_NOTIFY      0
-#define XEMBED_WINDOW_ACTIVATE      1
-#define XEMBED_FOCUS_IN             4
-#define XEMBED_MODALITY_ON         10
-#define XEMBED_MAPPED              (1 << 0)
-#define XEMBED_WINDOW_ACTIVATE      1
+#define XEMBED_EMBEDDED_NOTIFY	    0
+#define XEMBED_WINDOW_ACTIVATE	    1
+#define XEMBED_FOCUS_IN		    4
+#define XEMBED_MODALITY_ON	   10
+#define XEMBED_MAPPED		   (1 << 0)
+#define XEMBED_WINDOW_ACTIVATE	    1
 #define XEMBED_WINDOW_DEACTIVATE    2
-#define VERSION_MAJOR               0
-#define VERSION_MINOR               0
+#define VERSION_MAJOR		    0
+#define VERSION_MINOR		    0
 #define XEMBED_EMBEDDED_VERSION (VERSION_MAJOR << 16) | VERSION_MINOR
 
 /* enums */
@@ -134,7 +134,7 @@ struct Monitor {
 	float mfact;
 	int nmaster;
 	int num;
-	int by;               /* bar geometry */
+	int by;		      /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
 	unsigned int seltags;
@@ -160,7 +160,7 @@ typedef struct {
 	int monitor;
 } Rule;
 
-typedef struct Systray   Systray;
+typedef struct Systray	 Systray;
 struct Systray {
 	Window win;
 	Client *icons;
@@ -278,9 +278,9 @@ static const char dwmdir[] = "dwm";
 static const char localshare[] = ".local/share";
 static char stext[256];
 static int screen;
-static int sw, sh;           /* X display screen geometry width, height */
-static int bh;               /* bar height */
-static int lrpad;            /* sum of left and right padding for text */
+static int sw, sh;	     /* X display screen geometry width, height */
+static int bh;		     /* bar height */
+static int lrpad;	     /* sum of left and right padding for text */
 static int (*xerrorxlib)(Display *, XErrorEvent *);
 static unsigned int numlockmask = 0;
 static void (*handler[LASTEvent]) (XEvent *) = {
@@ -337,8 +337,8 @@ applyrules(Client *c)
 	c->isfloating = 0;
 	c->tags = 0;
 	XGetClassHint(dpy, c->win, &ch);
-	class    = ch.res_class ? ch.res_class : broken;
-	instance = ch.res_name  ? ch.res_name  : broken;
+	class	 = ch.res_class ? ch.res_class : broken;
+	instance = ch.res_name	? ch.res_name  : broken;
 
 	for (i = 0; i < LENGTH(rules); i++) {
 		r = &rules[i];
@@ -840,8 +840,8 @@ drawbar(Monitor *m)
 	if (m == selmon) { /* status is only drawn on selected monitor */
 		char *ts = stext;      /* pointer to scan through stext */
 		char *tp = stext;      /* pointer to start of current text segment */
-		int tx = 0;            /* x offset for current segment */
-		char ctmp;             /* temporary char storage */
+		int tx = 0;	       /* x offset for current segment */
+		char ctmp;	       /* temporary char storage */
 
 		drw_setscheme(drw, scheme[SchemeStatusNorm]); /* default color */
 		tw = TEXTW(stext) - lrpad / 2 + 2;
@@ -1483,7 +1483,7 @@ restoreSession(void)
 void
 quit(const Arg *arg)
 {
- 	if(arg->i) restart = 1;
+	if(arg->i) restart = 1;
 	running = 0;
 
 	if (restart == 1)
@@ -1681,7 +1681,7 @@ runautostart(void)
 	} else {
 		/* space for path segments, separators and nul */
 		pathpfx = ecalloc(1, strlen(home) + strlen(localshare)
-		                     + strlen(dwmdir) + 3);
+				     + strlen(dwmdir) + 3);
 
 		if (sprintf(pathpfx, "%s/%s/%s", home, localshare, dwmdir) < 0) {
 			free(pathpfx);
@@ -2507,7 +2507,7 @@ updatesystray(void)
 		if (!(systray = (Systray *)calloc(1, sizeof(Systray))))
 			die("fatal: could not malloc() %u bytes\n", sizeof(Systray));
 		systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSel][ColBg].pixel);
-		wa.event_mask        = ButtonPressMask | ExposureMask;
+		wa.event_mask	     = ButtonPressMask | ExposureMask;
 		wa.override_redirect = True;
 		wa.background_pixel  = scheme[SchemeNorm][ColBg].pixel;
 		XSelectInput(dpy, systray->win, SubstructureNotifyMask);
