@@ -5,8 +5,6 @@
 /* appearance */
 static const unsigned int borderpx  = 3;	/* border pixel of windows */
 static const unsigned int snap	    = 1;       /* snap pixel */
-static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
-static const int swterminheritfs    = 1;        /* 1 terminal inherits fullscreen on unswallow */
 static const unsigned int systraypinning = 0;	/* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft = 0;	/* 0: systray in the right corner, >0: systray on left of status text */
 static const unsigned int systrayspacing = 2;	/* systray spacing */
@@ -60,18 +58,17 @@ static const Rule rules[] = {
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
 	 */
-	/* class	      instance	  title			  tags mask	   isfloating	   isterminal	noswallow  monitor */
-    {scratchpadname,    NULL,      NULL,           TAG_ALL,         1,           1,           -1,        -1},
-    {"Alacritty",       NULL,      NULL,           0,               0,           1,           0,         -1},
-    {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
-    {"Emulator",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
-    {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
-    {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
-    {"Slack",		NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
-    {"Wasistlos",	NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
-    {"Moonlight",	NULL,	    NULL,		    TAG_MASK(9),     0,           0,           1,          0},
-    {NULL,		NULL,	    "DWM Overlay",	    TAG_ALL,	     1,           0,           1,         -1},
-    {NULL,		NULL,	    "Picture in picture",   TAG_ALL,	     1,           0,           1,         -1},
+	/* class	      instance	  title			  tags mask	   isfloating	   monitor */
+    {scratchpadname,    NULL,      NULL,           TAG_ALL,         1,           -1},
+    {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+    {"Emulator",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+    {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+    {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,		     -1},
+    {"Slack",		NULL,	    NULL,		    TAG_MASK(1),     0,		      1},
+    {"Wasistlos",	NULL,	    NULL,		    TAG_MASK(1),     0,		      1},
+    {"Moonlight",	NULL,	    NULL,		    TAG_MASK(9),     0,		      0},
+    {NULL,		NULL,	    "DWM Overlay",	    TAG_ALL,	     1,		     -1},
+    {NULL,		NULL,	    "Picture in picture",   TAG_ALL,	     1,		     -1},
 };
 
 /* layout(s) */
