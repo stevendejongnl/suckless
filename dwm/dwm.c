@@ -303,7 +303,7 @@ static const char autostartsh[] = "autostart.sh";
 static const char broken[] = "broken";
 static const char dwmdir[] = "dwm";
 static const char localshare[] = ".local/share";
-static char stext[256];
+static char stext[512];
 static int statusw;
 static int statussig;
 static pid_t statuspid = -1;
@@ -367,8 +367,9 @@ calculate_status_width(const char *text)
 	size_t seglen;
 
 	while (*ts) {
-		/* Check if current byte is a color code (0x01-0x0C) */
-		if ((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) {
+		/* Check if current byte is a color code (0x01-0x0C) or statuscmd (0x10-0x1F) */
+		if (((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) ||
+		    ((unsigned char)*ts >= 0x10 && (unsigned char)*ts <= 0x1f)) {
 			/* Measure text segment up to this point */
 			if (tp < ts) {
 				seglen = ts - tp;
@@ -1026,16 +1027,31 @@ drawbar(Monitor *m)
 	drw_setscheme(drw, scheme[SchemeTagsNorm]);
 	x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->ltsymbol, 0);
 
-	if ((w = m->ww - tw - stw - x) > bh) {
+	/* Calculate available space for window title */
+	unsigned int title_space = m->ww - tw - stw - x;
+	/* Limit title width to 15% of monitor width to preserve statusbar space */
+	unsigned int max_title_width = (m->ww * 15) / 100;
+	if (title_space > max_title_width)
+		title_space = max_title_width;
+
+	if (title_space > bh) {
+		/* Enough space for window title - draw it normally */
 		if (m->sel) {
 			drw_setscheme(drw, scheme[m == selmon ? SchemeInfoSel : SchemeInfoNorm]);
-			drw_text(drw, x, 0, w, bh, lrpad / 2, m->sel->name, 0);
+			drw_text(drw, x, 0, title_space, bh, lrpad / 2, m->sel->name, 0);
 			if (m->sel->isfloating)
 				drw_rect(drw, x + boxs, boxs, boxw, boxw, m->sel->isfixed, 0);
 		} else {
 			drw_setscheme(drw, scheme[SchemeInfoNorm]);
-			drw_rect(drw, x, 0, w, bh, 1, 1);
+			drw_rect(drw, x, 0, title_space, bh, 1, 1);
 		}
+		/* Fill remaining space with background */
+		drw_setscheme(drw, scheme[SchemeInfoNorm]);
+		drw_rect(drw, x + title_space, 0, m->ww - tw - stw - x - title_space, bh, 1, 1);
+	} else {
+		/* No space for window title - fill middle area with background */
+		drw_setscheme(drw, scheme[SchemeInfoNorm]);
+		drw_rect(drw, x, 0, m->ww - tw - stw, bh, 1, 1);
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 }
