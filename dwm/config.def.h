@@ -119,7 +119,10 @@ static const Layout layouts[] = {
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 #include "movestack.c"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
 #include "vanitygaps.c"
+#pragma GCC diagnostic pop
 
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
@@ -142,111 +145,111 @@ static const char *notifcmd[] = { "/home/stevendejong/.local/bin/notification-ce
 static const Key keys[] = {
 	/* modifier			key	   function	   argument */
 	// Move between workspaces
-	{ MODKEY,				XK_bracketleft,	  shiftviewclients,   { .i = -1 } },
-	{ MODKEY,			XK_bracketright,  shiftviewclients,   { .i = +1 } },
-	{ MODKEY|ShiftMask,		XK_bracketleft,		shiftview,	    { .i = -1 } },
-	{ MODKEY|ShiftMask,		XK_bracketright,	shiftview,	    { .i = +1 } },
+	{ MODKEY,			XK_bracketleft,	shiftviewclients,	{ .i = -1 } }, // Move to previous workspace
+	{ MODKEY,			XK_bracketright,	shiftviewclients,	{ .i = +1 } }, // Move to next workspace
+	{ MODKEY|ShiftMask,		XK_bracketleft,	shiftview,		{ .i = -1 } }, // Move active workspace left
+	{ MODKEY|ShiftMask,		XK_bracketright,	shiftview,		{ .i = +1 } }, // Move active workspace right
 
 	// Spawn applications
-	{ MODKEY,			XK_p,	   spawn,	   {.v = dmenucmd } },
-    { MODKEY,			    XK_space,  spawn,	       SHCMD("rofi -show drun") },
-    { MODKEY|Mod1Mask,		    XK_space,  spawn,	       SHCMD("rofi -show window") },
-	{ MODKEY,			XK_Return, spawn,	   {.v = termcmd } },
-	{ MODKEY|Mod1Mask,		XK_Return, spawn,	   {.v = termtwocmd } },
-	{ MODKEY,			XK_grave,  togglescratch,  {.v = scratchpadcmd } },
+	{ MODKEY,			XK_p,		spawn,		{.v = dmenucmd } }, // Open application launcher
+	{ MODKEY,			XK_space,	spawn,		SHCMD("rofi -show drun") }, // Open rofi app launcher
+	{ MODKEY|Mod1Mask,		XK_space,	spawn,		SHCMD("rofi -show window") }, // Switch windows with rofi
+	{ MODKEY,			XK_Return,	spawn,		{.v = termcmd } }, // Open terminal
+	{ MODKEY|Mod1Mask,		XK_Return,	spawn,		{.v = termtwocmd } }, // Open terminal in new window
+	{ MODKEY,			XK_grave,	togglescratch,	{.v = scratchpadcmd } }, // Toggle scratchpad
 
 	// Help overlay
-	{ ControlMask,			XK_h,	   spawn,	   {.v = helpoverlaycmd } },
+	{ ControlMask,			XK_h,		spawn,		{.v = helpoverlaycmd } }, // Open keybindings help overlay
 
-  // Notification center
-  { MODKEY,			  XK_n,	     spawn,	     {.v = notifcmd } },
+	// Notification center
+	{ MODKEY,			XK_n,		spawn,		{.v = notifcmd } }, // Show notification center
 
 	// Toggle bar
-	{ MODKEY,			XK_b,	   togglebar,	   {0} },
+	{ MODKEY,			XK_b,		togglebar,	{0} }, // Toggle status bar
 
 	// Focus between windows
-	{ MODKEY,			XK_j,	   focusstack,	   {.i = +1 } },
-	{ MODKEY,			XK_k,	   focusstack,	   {.i = -1 } },
+	{ MODKEY,			XK_j,		focusstack,	{.i = +1 } }, // Focus next window
+	{ MODKEY,			XK_k,		focusstack,	{.i = -1 } }, // Focus previous window
 
 	// Move windows in stack
-	{ MODKEY|ShiftMask,		XK_j,	   movestack,	   {.i = +1 } },
-	{ MODKEY|ShiftMask,		XK_k,	   movestack,	   {.i = -1 } },
+	{ MODKEY|ShiftMask,		XK_j,		movestack,	{.i = +1 } }, // Move window down
+	{ MODKEY|ShiftMask,		XK_k,		movestack,	{.i = -1 } }, // Move window up
 
 	// Increase/decrease number of master windows
-	{ MODKEY,			XK_i,	   incnmaster,	   {.i = +1 } },
-	{ MODKEY,			XK_d,	   incnmaster,	   {.i = -1 } },
+	{ MODKEY,			XK_i,		incnmaster,	{.i = +1 } }, // Add master window
+	{ MODKEY,			XK_d,		incnmaster,	{.i = -1 } }, // Remove master window
 
 	// Increase/decrease master size
-	{ MODKEY,			XK_h,	   setmfact,	   {.f = -0.05} },
-	{ MODKEY|ShiftMask,		XK_h,	   shiftboth,	   { .i = -1 }	},
-	{ MODKEY|ControlMask,		XK_h,	   shiftswaptags,  { .i = -1 }	},
-	{ MODKEY|ControlMask,		XK_l,	   shiftswaptags,  { .i = +1 }	},
-	{ MODKEY|ShiftMask,		XK_l,	   shiftboth,	   { .i = +1 }	},
-	{ MODKEY,			XK_l,	   setmfact,	   {.f = +0.05} },
+	{ MODKEY,			XK_h,		setmfact,	{.f = -0.05} }, // Decrease master size
+	{ MODKEY|ShiftMask,		XK_h,		shiftboth,	{ .i = -1 } }, // Move active master left
+	{ MODKEY|ControlMask,		XK_h,		shiftswaptags,	{ .i = -1 } }, // Swap active with left master
+	{ MODKEY|ControlMask,		XK_l,		shiftswaptags,	{ .i = +1 } }, // Swap active with right master
+	{ MODKEY|ShiftMask,		XK_l,		shiftboth,	{ .i = +1 } }, // Move active master right
+	{ MODKEY,			XK_l,		setmfact,	{.f = +0.05} }, // Increase master size
 
 	// Zoom into master
-	{ MODKEY,			XK_Return, zoom,	   {0} },
-	{ MODKEY,			XK_Tab,	   view,	   {0} },
+	{ MODKEY,			XK_Return,	zoom,		{0} }, // Zoom active window to master
+	{ MODKEY,			XK_Tab,		view,		{0} }, // Toggle to previous layout
 
 	// Quit window
-	{ MODKEY|ShiftMask,		XK_c,	   killclient,	   {0} },
+	{ MODKEY|ShiftMask,		XK_c,		killclient,	{0} }, // Kill active window
 
 	// Toggle modes
-	{ MODKEY,			XK_t,	   setlayout,	   {.v = &layouts[0]} },
-	{ MODKEY,			XK_f,	   setlayout,	   {.v = &layouts[1]} },
-	{ MODKEY,			XK_m,	   setlayout,	   {.v = &layouts[2]} },
-	//{ MODKEY,			  XK_space,  setlayout,	     {0} },
-	{ MODKEY|ControlMask,		XK_space,  setlayout,	   {0} },
-	{ MODKEY|ShiftMask,		XK_space,  togglefloating, {0} },
+	{ MODKEY,			XK_t,		setlayout,	{.v = &layouts[0]} }, // Set tiled layout
+	{ MODKEY,			XK_f,		setlayout,	{.v = &layouts[1]} }, // Set floating layout
+	{ MODKEY,			XK_m,		setlayout,	{.v = &layouts[2]} }, // Set monocle layout
+	//{ MODKEY,			XK_space,	setlayout,	{0} },
+	{ MODKEY|ControlMask,		XK_space,	setlayout,	{0} }, // Toggle between layouts
+	{ MODKEY|ShiftMask,		XK_space,	togglefloating,	{0} }, // Toggle floating mode
 
 	// Manage gaps
-	{ MODKEY|Mod1Mask,		XK_u,	   incrgaps,	   {.i = +1} },
-	{ MODKEY|Mod1Mask|ShiftMask,	XK_u,	   incrgaps,	   {.i = -1} },
-	{ MODKEY|Mod1Mask,		XK_i,	   incrigaps,	   {.i = +1} },
-	{ MODKEY|Mod1Mask|ShiftMask,	XK_i,	   incrigaps,	   {.i = -1} },
-	{ MODKEY|Mod1Mask,		XK_o,	   incrogaps,	   {.i = +1} },
-	{ MODKEY|Mod1Mask|ShiftMask,	XK_o,	   incrogaps,	   {.i = -1} },
-	{ MODKEY|Mod1Mask,		XK_6,	   togglegaps,	   {0} },
-	{ MODKEY|Mod1Mask|ShiftMask,	XK_6,	   defaultgaps,	   {0} },
+	{ MODKEY|Mod1Mask,		XK_u,		incrgaps,	{.i = +1} }, // Increase all gaps
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_u,		incrgaps,	{.i = -1} }, // Decrease all gaps
+	{ MODKEY|Mod1Mask,		XK_i,		incrigaps,	{.i = +1} }, // Increase inner gaps
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_i,		incrigaps,	{.i = -1} }, // Decrease inner gaps
+	{ MODKEY|Mod1Mask,		XK_o,		incrogaps,	{.i = +1} }, // Increase outer gaps
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_o,		incrogaps,	{.i = -1} }, // Decrease outer gaps
+	{ MODKEY|Mod1Mask,		XK_6,		togglegaps,	{0} }, // Toggle gaps
+	{ MODKEY|Mod1Mask|ShiftMask,	XK_6,		defaultgaps,	{0} }, // Reset gaps to default
 
 	// Show all windows
-	{ MODKEY,			XK_0,	   view,	   {.ui = ~0 } },
+	{ MODKEY,			XK_0,		view,		{.ui = ~0 } }, // Show all windows
 
 	// Pin window to move active tag
-	{ MODKEY|ShiftMask,		XK_0,	   tag,		   {.ui = ~0 } },
+	{ MODKEY|ShiftMask,		XK_0,		tag,		{.ui = ~0 } }, // Tag window to all workspaces
 
 	// Move and focus between tags
-	{ MODKEY,			XK_comma,  focusmon,	   {.i = -1 } },
-	{ MODKEY,			XK_period, focusmon,	   {.i = +1 } },
-	{ MODKEY|ShiftMask,		XK_comma,  tagmon,	   {.i = -1 } },
-	{ MODKEY|ShiftMask,		XK_period, tagmon,	   {.i = +1 } },
+	{ MODKEY,			XK_comma,	focusmon,	{.i = -1 } }, // Focus previous monitor
+	{ MODKEY,			XK_period,	focusmon,	{.i = +1 } }, // Focus next monitor
+	{ MODKEY|ShiftMask,		XK_comma,	tagmon,		{.i = -1 } }, // Move window to previous monitor
+	{ MODKEY|ShiftMask,		XK_period,	tagmon,		{.i = +1 } }, // Move window to next monitor
 
 	// Function keys
-	{0, XF86MonBrightnessDown, spawn, SHCMD("xbacklight -inc 5")},
-	{0, XF86MonBrightnessUp, spawn, SHCMD("xbacklight -dec 5")},
-	{0, XF86AudioLowerVolume, spawn, SHCMD("pamixer --decrease 5")},
-	{0, XF86AudioMute, spawn, SHCMD("pamixer --toggle-mute")},
-	{0, XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5")},
-	// {0, XF86AudioMicMute, spawning, SHCMD ("pamixer --default-source --toggle-mute")},
-	// {0, XF86Messenger, spawn, SHCMD("")},
-	// {0, XF86Favorite, spawn, SHCMD("")},
-	// {0, XF86WLAN, spawn, SHCMD("")},
-  
+	{ 0,				XF86MonBrightnessDown, spawn, SHCMD("xbacklight -inc 5") }, // Decrease brightness
+	{ 0,				XF86MonBrightnessUp, spawn, SHCMD("xbacklight -dec 5") }, // Increase brightness
+	{ 0,				XF86AudioLowerVolume, spawn, SHCMD("pamixer --decrease 5") }, // Lower volume
+	{ 0,				XF86AudioMute, spawn, SHCMD("pamixer --toggle-mute") }, // Mute audio
+	{ 0,				XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5") }, // Raise volume
+	// { 0,			XF86AudioMicMute, spawn, SHCMD ("pamixer --default-source --toggle-mute") },
+	// { 0,			XF86Messenger, spawn, SHCMD("") },
+	// { 0,			XF86Favorite, spawn, SHCMD("") },
+	// { 0,			XF86WLAN, spawn, SHCMD("") },
+
 	// Tag keys
-	TAGKEYS(			XK_1,			   0)
-	TAGKEYS(			XK_2,			   1)
-	TAGKEYS(			XK_3,			   2)
-	TAGKEYS(			XK_4,			   3)
-	TAGKEYS(			XK_5,			   4)
-	TAGKEYS(			XK_6,			   5)
-	TAGKEYS(			XK_7,			   6)
-	TAGKEYS(			XK_8,			   7)
-	TAGKEYS(			XK_9,			   8)
+	TAGKEYS(			XK_1,			0)
+	TAGKEYS(			XK_2,			1)
+	TAGKEYS(			XK_3,			2)
+	TAGKEYS(			XK_4,			3)
+	TAGKEYS(			XK_5,			4)
+	TAGKEYS(			XK_6,			5)
+	TAGKEYS(			XK_7,			6)
+	TAGKEYS(			XK_8,			7)
+	TAGKEYS(			XK_9,			8)
 
 	// Quit DWM
-	{ MODKEY|ShiftMask,		XK_q,	   quit,	   {0} },
-    // Restart DWM
-	{ MODKEY|ControlMask|ShiftMask, XK_q,	   quit,	   {1} },
+	{ MODKEY|ShiftMask,		XK_q,		quit,		{0} }, // Quit DWM
+	// Restart DWM
+	{ MODKEY|ControlMask|ShiftMask,	XK_q,		quit,		{1} }, // Restart DWM
 };
 
 /* button definitions */
@@ -260,7 +263,7 @@ static const Button buttons[] = {
 	{ ClkStatusText,	0,		Button2,	sigstatusbar,	{.i = 2} },
 	{ ClkStatusText,	0,		Button3,	sigstatusbar,	{.i = 3} },
 	{ ClkClientWin,		MODKEY,		Button1,	movemouse,	{0} },
-	{ ClkClientWin,		MODKEY,		Button2,	togglefloating, {0} },
+	{ ClkClientWin,		MODKEY,		Button2,	togglefloating,	{0} },
 	{ ClkClientWin,		MODKEY,		Button3,	resizemouse,	{0} },
 	{ ClkTagBar,		0,		Button1,	view,		{0} },
 	{ ClkTagBar,		0,		Button3,	toggleview,	{0} },
