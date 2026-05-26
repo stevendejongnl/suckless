@@ -14,16 +14,26 @@ All tools follow the suckless philosophy: code-based configuration with no exter
 ## Build Commands
 
 ```bash
-# Build and install all tools (requires sudo)
-make all
-
-# Build individual tools
-make dwm         # Window manager
-make dmenu       # Menu system
-make slock       # Screen locker
+# Always run from the suckless repo root (the root Makefile wraps `sudo make -C …`).
+# Sudo is required; it will prompt for password or fingerprint.
+make all          # Build + install all tools
+make dwm          # Window manager
+make dmenu        # Menu system
+make slock        # Screen locker
 ```
 
-Each target removes existing `config.h`, regenerates from `config.def.h`, and runs `sudo make -C ./[tool] clean install`.
+Each target removes existing `config.h`, regenerates from `config.def.h`, and runs `sudo make -C ./[tool] clean install`. Do **not** run `make` inside a tool subdirectory for install — the root Makefile is the canonical entry point.
+
+### Applying dwm changes (hot reload)
+
+`dwm` has the `restartsig` + `restoreafterrestart` patches, so after installing a new binary:
+
+| Keybind                            | Action                                 |
+|------------------------------------|----------------------------------------|
+| `Super + Ctrl + Shift + Q`         | Restart dwm in place (session preserved) |
+| `Super + Shift + Q`                | Quit dwm entirely                      |
+
+The restart keybind picks up the new `/usr/local/bin/dwm` and keeps open windows/tags/layouts via `/tmp/dwm-session`.
 
 ## Configuration System
 

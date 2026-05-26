@@ -943,11 +943,19 @@ drawbar(Monitor *m)
 		stw = getsystraywidth();
 
 	/* draw status first so it can be overdrawn by tags later */
-	if (m == selmon) { /* status is only drawn on selected monitor */
+	{
 		char *ts = stext;      /* pointer to scan through stext */
 		char *tp = stext;      /* pointer to start of current text segment */
 		int tx = 0;	       /* x offset for current segment */
 		char ctmp;	       /* temporary char storage */
+		/* Apply left padding only to the first segment. Each drw_text call
+		 * fills its background across the whole segment box, which would
+		 * otherwise paint over the tail of the previous segment's text. By
+		 * giving subsequent segments lpad=0 and advancing tx by the first
+		 * segment's lpad, each segment's text lands exactly where the
+		 * previous one's text ended — no overlap, no clipped glyphs. */
+		int first_drawn = 1;
+		unsigned int seg_lpad;
 
 		drw_setscheme(drw, scheme[SchemeStatusNorm]); /* default color */
 		tw = calculate_status_width(stext) - lrpad / 2 + 2;
@@ -961,8 +969,10 @@ drawbar(Monitor *m)
 
 				/* Draw text segment up to this point */
 				if (tp < ts) {
-					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, lrpad / 2 - 2, tp, 0);
-					tx += TEXTW(tp) - lrpad;
+					seg_lpad = first_drawn ? (lrpad / 2 - 2) : 0;
+					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, seg_lpad, tp, 0);
+					tx += TEXTW(tp) - lrpad + seg_lpad;
+					first_drawn = 0;
 				}
 
 				*ts = ctmp; /* restore character */
@@ -986,8 +996,10 @@ drawbar(Monitor *m)
 
 				/* Draw text segment up to this point */
 				if (tp < ts) {
-					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, lrpad / 2 - 2, tp, 0);
-					tx += TEXTW(tp) - lrpad;
+					seg_lpad = first_drawn ? (lrpad / 2 - 2) : 0;
+					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, seg_lpad, tp, 0);
+					tx += TEXTW(tp) - lrpad + seg_lpad;
+					first_drawn = 0;
 				}
 
 				*ts = ctmp; /* restore character */
@@ -997,8 +1009,10 @@ drawbar(Monitor *m)
 
 			if (*ts == '\0') {
 				/* Draw final segment */
-				if (tp < ts)
-					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, lrpad / 2 - 2, tp, 0);
+				if (tp < ts) {
+					seg_lpad = first_drawn ? (lrpad / 2 - 2) : 0;
+					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, seg_lpad, tp, 0);
+				}
 				break;
 			}
 
@@ -1049,9 +1063,12 @@ drawbar(Monitor *m)
 		drw_setscheme(drw, scheme[SchemeInfoNorm]);
 		drw_rect(drw, x + title_space, 0, m->ww - tw - stw - x - title_space, bh, 1, 1);
 	} else {
-		/* No space for window title - fill middle area with background */
+		/* No space for window title - fill middle area with background.
+		 * Width is "status_start - x"; the previous form omitted `- x`,
+		 * causing the fill to extend past the status start and paint
+		 * over the leftmost status segments (disk/memory). */
 		drw_setscheme(drw, scheme[SchemeInfoNorm]);
-		drw_rect(drw, x, 0, m->ww - tw - stw, bh, 1, 1);
+		drw_rect(drw, x, 0, m->ww - tw - stw - x, bh, 1, 1);
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 }

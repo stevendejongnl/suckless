@@ -17,6 +17,7 @@ static const int topbar		    = 1;	/* 0 means bottom bar */
 static const int focusonwheel	    = 0;
 static const char *fonts[]	    = {
 	"monospace:size=10",
+	"JetBrainsMono Nerd Font Mono:size=10",
 	"Noto Color Emoji:size=10"
 };
 static const char dmenufont[]	    = "monospace:size=10,Noto Color Emoji:size=10";
@@ -71,6 +72,7 @@ static const Rule rules[] = {
     {"Slack",		NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
     {"Wasistlos",	NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
     {"Moonlight",	NULL,	    NULL,		    TAG_MASK(9),     0,           0,           1,          0},
+    {"claude-git-guard",NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {NULL,		NULL,	    "DWM Overlay",	    TAG_ALL,	     1,           0,           1,         -1},
     {NULL,		NULL,	    "Picture in picture",   TAG_ALL,	     1,           0,           1,         -1},
 };

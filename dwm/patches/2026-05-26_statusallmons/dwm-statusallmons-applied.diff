@@ -1,0 +1,11 @@
+--- a/dwm/dwm.c
++++ b/dwm/dwm.c
+@@ -943,7 +943,7 @@ drawbar(Monitor *m)
+ 		stw = getsystraywidth();
+
+ 	/* draw status first so it can be overdrawn by tags later */
+-	if (m == selmon) { /* status is only drawn on selected monitor */
++	{
+ 		char *ts = stext;      /* pointer to scan through stext */
+ 		char *tp = stext;      /* pointer to start of current text segment */
+ 		int tx = 0;	       /* x offset for current segment */

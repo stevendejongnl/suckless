@@ -2,7 +2,7 @@
 
 ## Dwm
 
-### Applied Patches (16 total)
+### Applied Patches (15 total)
 
 #### Core Functionality (4 patches)
 - [autostart](https://dwm.suckless.org/patches/autostart) - Run startup scripts on DWM init
@@ -34,6 +34,9 @@
   - Terminal-launched GUI apps replace terminal temporarily
   - Close GUI to restore terminal
   - Requires libxcb for window introspection
+
+#### Visual Enhancements (continued)
+- **[statusallmons](https://dwm.suckless.org/patches/statusallmons)** (2026-05-26) - Draw status bar on all monitors, not just the focused one
 
 #### Session Management (2 patches)
 - [restartsig](https://dwm.suckless.org/patches/restartsig) - MODKEY+Ctrl+Shift+Q restarts DWM
