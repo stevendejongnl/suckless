@@ -69,10 +69,12 @@ static const Rule rules[] = {
     {"Emulator",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
+    {"Bitwarden",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Slack",		NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
     {"Wasistlos",	NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
     {"Moonlight",	NULL,	    NULL,		    TAG_MASK(9),     0,           0,           1,          0},
     {"claude-git-guard",NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
+    {"Gkrellm",         NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {NULL,		NULL,	    "DWM Overlay",	    TAG_ALL,	     1,           0,           1,         -1},
     {NULL,		NULL,	    "Picture in picture",   TAG_ALL,	     1,           0,           1,         -1},
 };
@@ -169,6 +171,8 @@ static const Key keys[] = {
 	{ MODKEY|Mod1Mask,		XK_Return,	spawn,		{.v = termtwocmd } },
 	// Toggle scratchpad
 	{ MODKEY,			XK_grave,	togglescratch,	{.v = scratchpadcmd } },
+  // Bitwarden Rofi
+  { MODKEY|ControlMask|ShiftMask, XK_space, spawn,  SHCMD("rofi-rbw") },
 
 	// Help overlay
 	// Open keybindings help overlay
@@ -177,6 +181,7 @@ static const Key keys[] = {
 	// Notification center
 	// Show notification center
 	{ MODKEY,			XK_n,		spawn,		{.v = notifcmd } },
+	{ MODKEY,			XK_g,		spawn,		SHCMD("gkrellm") },
 
 	// Toggle bar
 	// Toggle status bar
@@ -288,6 +293,8 @@ static const Key keys[] = {
 	// { 0,			XF86Messenger, spawn, SHCMD("") },
 	// { 0,			XF86Favorite, spawn, SHCMD("") },
 	// { 0,			XF86WLAN, spawn, SHCMD("") },
+	// Screenshot
+	{ 0,				XK_Print,    spawn, SHCMD("flameshot gui") },
 
 	// Tag keys
 	TAGKEYS(			XK_1,			0)
