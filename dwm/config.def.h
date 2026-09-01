@@ -21,27 +21,27 @@ static const char *fonts[]	    = {
 	"Noto Color Emoji:size=10"
 };
 static const char dmenufont[]	    = "monospace:size=10,Noto Color Emoji:size=10";
-static const char col_gray1[]	    = "#222222";
-static const char col_gray2[]	    = "#444444";
-static const char col_gray3[]	    = "#bbbbbb";
-static const char col_gray4[]	    = "#eeeeee";
-static const char col_cyan[]	    = "#EF476F";
-/* Status bar colors */
-static const char col_status_norm[]	= "#bbbbbb";  /* Default status text */
-static const char col_status_low[]	= "#1B9AAA";  /* Low/info - cyan/teal */
-static const char col_status_medium[]	= "#FFC43D";  /* Medium - yellow */
-static const char col_status_high[]	= "#FF6B35";  /* High/warning - orange */
-static const char col_status_critical[] = "#EF476F";  /* Critical - red/pink */
-static const char col_status_success[]	= "#06D6A0";  /* Success - green */
+static const char col_gray1[]	    = "#12141C";
+static const char col_gray2[]	    = "#2A2F3D";
+static const char col_gray3[]	    = "#7A7F99";
+static const char col_gray4[]	    = "#D3D6E6";
+static const char col_cyan[]	    = "#3EE6E0";
+/* Status bar colors — Rime theme, https://git.madebysteven.nl/stevendejong/rime */
+static const char col_status_norm[]	= "#9AA0C0";  /* Default status text */
+static const char col_status_low[]	= "#3EE6E0";  /* Low/info - cyan */
+static const char col_status_medium[]	= "#FFD473";  /* Medium - yellow */
+static const char col_status_high[]	= "#FFA36B";  /* High/warning - orange */
+static const char col_status_critical[] = "#FF5C78";  /* Critical - red/pink */
+static const char col_status_success[]	= "#7FD88F";  /* Success - green */
 static const char *colors[][3]	    = {
 	/*		 fg	    bg	       border	*/
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan	 },
-	[SchemeStatus]	= { col_gray3, col_gray1,  "#1B9AAA"  }, // Statusbar right {text,background,not used but cannot be empty}
-	[SchemeTagsSel]	 = { col_gray4, col_cyan,  "#06D6A0"  }, // Tagbar left selected {text,background,not used but cannot be empty}
-	[SchemeTagsNorm]  = { col_gray3, col_gray1,  "#1B9AAA"	}, // Tagbar left unselected {text,background,not used but cannot be empty}
-	[SchemeInfoSel]	 = { col_gray4, col_cyan,  "#EF476F"  }, // infobar middle  selected {text,background,not used but cannot be empty}
-	[SchemeInfoNorm]  = { col_gray3, col_gray1,  "#1B9AAA"	}, // infobar middle  unselected {text,background,not used but cannot be empty}
+	[SchemeStatus]	= { col_gray3, col_gray1,  "#3EE6E0"  }, // Statusbar right {text,background,not used but cannot be empty}
+	[SchemeTagsSel]	 = { col_gray4, col_cyan,  "#7FD88F"  }, // Tagbar left selected {text,background,not used but cannot be empty}
+	[SchemeTagsNorm]  = { col_gray3, col_gray1,  "#3EE6E0"	}, // Tagbar left unselected {text,background,not used but cannot be empty}
+	[SchemeInfoSel]	 = { col_gray4, col_cyan,  "#FF5C78"  }, // infobar middle  selected {text,background,not used but cannot be empty}
+	[SchemeInfoNorm]  = { col_gray3, col_gray1,  "#3EE6E0"	}, // infobar middle  unselected {text,background,not used but cannot be empty}
 	/* Status bar color schemes */
 	[SchemeStatusNorm]     = { col_status_norm,	col_gray1, col_gray2 },
 	[SchemeStatusLow]      = { col_status_low,	col_gray1, col_gray2 },
