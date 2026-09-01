@@ -1417,6 +1417,17 @@ manage(Window w, XWindowAttributes *wa)
 	c->y = MAX(c->y, c->mon->wy);
 	c->bw = borderpx;
 
+	{
+		XClassHint ch = { NULL, NULL };
+		XGetClassHint(dpy, w, &ch);
+		if (ch.res_class && !strcmp(ch.res_class, "flameshot")) {
+			c->x = c->mon->mx;
+			c->y = c->mon->my;
+		}
+		if (ch.res_class) XFree(ch.res_class);
+		if (ch.res_name) XFree(ch.res_name);
+	}
+
 	selmon->tagset[selmon->seltags] &= ~scratchtag;
 	if (!strcmp(c->name, scratchpadname)) {
 		c->mon->tagset[c->mon->seltags] |= c->tags = scratchtag;

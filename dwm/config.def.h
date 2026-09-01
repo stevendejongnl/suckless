@@ -75,6 +75,7 @@ static const Rule rules[] = {
     {"Moonlight",	NULL,	    NULL,		    TAG_MASK(9),     0,           0,           1,          0},
     {"claude-git-guard",NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {"Gkrellm",         NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
+    {"flameshot",       NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {NULL,		NULL,	    "DWM Overlay",	    TAG_ALL,	     1,           0,           1,         -1},
     {NULL,		NULL,	    "Picture in picture",   TAG_ALL,	     1,           0,           1,         -1},
 };
