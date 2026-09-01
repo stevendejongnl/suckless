@@ -38,9 +38,9 @@ static const char *colors[][3]	    = {
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan	 },
 	[SchemeStatus]	= { col_gray3, col_gray1,  "#3EE6E0"  }, // Statusbar right {text,background,not used but cannot be empty}
-	[SchemeTagsSel]	 = { col_gray4, col_cyan,  "#7FD88F"  }, // Tagbar left selected {text,background,not used but cannot be empty}
+	[SchemeTagsSel]	 = { col_cyan, col_gray1,  "#7FD88F"  }, // Tagbar left selected {text,background,not used but cannot be empty}
 	[SchemeTagsNorm]  = { col_gray3, col_gray1,  "#3EE6E0"	}, // Tagbar left unselected {text,background,not used but cannot be empty}
-	[SchemeInfoSel]	 = { col_gray4, col_cyan,  "#FF5C78"  }, // infobar middle  selected {text,background,not used but cannot be empty}
+	[SchemeInfoSel]	 = { col_cyan, col_gray1,  "#FF5C78"  }, // infobar middle  selected {text,background,not used but cannot be empty}
 	[SchemeInfoNorm]  = { col_gray3, col_gray1,  "#3EE6E0"	}, // infobar middle  unselected {text,background,not used but cannot be empty}
 	/* Status bar color schemes */
 	[SchemeStatusNorm]     = { col_status_norm,	col_gray1, col_gray2 },
