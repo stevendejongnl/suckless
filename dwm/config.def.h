@@ -229,6 +229,8 @@ static const Key keys[] = {
 	// Quit window
 	// Kill active window
 	{ MODKEY|ShiftMask,		XK_c,		killclient,	{0} },
+	// Force-kill a hung window (click the target)
+	{ MODKEY|ShiftMask,		XK_x,		spawn,		SHCMD("xkill") },
 
 	// Toggle modes
 	// Set tiled layout
