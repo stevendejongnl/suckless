@@ -66,7 +66,7 @@ static const Rule rules[] = {
     {scratchpadname,    NULL,      NULL,           TAG_ALL,         1,           1,           -1,        -1},
     {"Alacritty",       NULL,      NULL,           0,               0,           1,           0,         -1},
     {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
-    {"Emulator",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
+    {NULL,	"qemu-system-x86_64", NULL,	    TAG_MASK(9),     1,           0,           1,         -1},
     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Bitwarden",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
