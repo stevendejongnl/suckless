@@ -2,11 +2,15 @@
 
 ## Dwm
 
-### Applied Patches (15 total)
+### Applied Patches (16 total)
 
-#### Core Functionality (4 patches)
+#### Core Functionality (5 patches)
 - [autostart](https://dwm.suckless.org/patches/autostart) - Run startup scripts on DWM init
 - [systray](https://dwm.suckless.org/patches/systray) - System tray support in status bar
+- **systray ignore list** (2026-11-02, custom) - Refuse chosen tray icons
+  - Edit `systrayignore[]` in `config.def.h`, matched on the icon's WM_CLASS instance or class
+  - Find a name with `xprop -id <icon window> WM_CLASS`
+  - A refused icon is never docked, so it stays invisible and its app keeps running
 - [shift tools](https://dwm.suckless.org/patches/shift-tools) - Enhanced workspace navigation
 - [pertag](https://dwm.suckless.org/patches/pertag) - Per-tag layout management
 

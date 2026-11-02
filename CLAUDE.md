@@ -59,6 +59,7 @@ make dwm
 
 **Key features applied via patches** (stored in `dwm/patches/`):
 - `systray` - System tray support in status bar
+- `systray ignore list` - `systrayignore[]` in `config.def.h` refuses tray icons by WM_CLASS (find one with `xprop -id <icon window> WM_CLASS`)
 - `pertag` - Per-tag layout settings
 - `shift-tools` - Enhanced tool selection
 - `autostart` - Run custom startup scripts

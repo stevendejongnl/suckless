@@ -1,0 +1,61 @@
+--- a/config.def.h
++++ b/config.def.h
+@@ -12,6 +12,12 @@
+ static const unsigned int systrayspacing = 2;	/* systray spacing */
+ static const int systraypinningfailfirst = 1;	/* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
+ static const int showsystray	    = 1;	/* 0 means no systray */
++/* systray icons to refuse, matched on the WM_CLASS instance or class of the icon window.
++ * Find a name with: xprop -id <icon window> WM_CLASS. Keep NULL as the last entry. */
++static const char *systrayignore[] = {
++	"indicator-solaar",
++	NULL
++};
+ static const int showbar	    = 1;	/* 0 means no bar */
+ static const int topbar		    = 1;	/* 0 means bottom bar */
+ static const int focusonwheel	    = 0;
+--- a/dwm.c
++++ b/dwm.c
+@@ -284,6 +284,7 @@
+ static Client *wintoclient(Window w);
+ static Monitor *wintomon(Window w);
+ static Client *wintosystrayicon(Window w);
++static int systrayignored(Window w);
+ static int xerror(Display *dpy, XErrorEvent *ee);
+ static int xerrordummy(Display *dpy, XErrorEvent *ee);
+ static int xerrorstart(Display *dpy, XErrorEvent *ee);
+@@ -675,6 +676,8 @@
+ 	if (showsystray && cme->window == systray->win && cme->message_type == netatom[NetSystemTrayOP]) {
+ 		/* add systray icons */
+ 		if (cme->data.l[1] == SYSTEM_TRAY_REQUEST_DOCK) {
++			if (systrayignored(cme->data.l[2]))
++				return;
+ 			if (!(c = (Client *)calloc(1, sizeof(Client))))
+ 				die("fatal: could not malloc() %u bytes\n", sizeof(Client));
+ 			if (!(c->win = cme->data.l[2])) {
+@@ -2886,6 +2889,26 @@
+ 			systray->win, XEMBED_EMBEDDED_VERSION);
+ }
+ 
++int
++systrayignored(Window w)
++{
++	XClassHint ch = { NULL, NULL };
++	unsigned int i;
++	int ignored = 0;
++
++	if (!XGetClassHint(dpy, w, &ch))
++		return 0;
++	for (i = 0; systrayignore[i]; i++)
++		if ((ch.res_name && !strcmp(ch.res_name, systrayignore[i]))
++		|| (ch.res_class && !strcmp(ch.res_class, systrayignore[i])))
++			ignored = 1;
++	if (ch.res_name)
++		XFree(ch.res_name);
++	if (ch.res_class)
++		XFree(ch.res_class);
++	return ignored;
++}
++
+ void
+ updatesystray(void)
+ {

@@ -284,6 +284,7 @@ static void view(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
 static Client *wintosystrayicon(Window w);
+static int systrayignored(Window w);
 static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
@@ -675,6 +676,8 @@ clientmessage(XEvent *e)
 	if (showsystray && cme->window == systray->win && cme->message_type == netatom[NetSystemTrayOP]) {
 		/* add systray icons */
 		if (cme->data.l[1] == SYSTEM_TRAY_REQUEST_DOCK) {
+			if (systrayignored(cme->data.l[2]))
+				return;
 			if (!(c = (Client *)calloc(1, sizeof(Client))))
 				die("fatal: could not malloc() %u bytes\n", sizeof(Client));
 			if (!(c->win = cme->data.l[2])) {
@@ -2884,6 +2887,26 @@ updatesystrayiconstate(Client *i, XPropertyEvent *ev)
 		return;
 	sendevent(i->win, xatom[Xembed], StructureNotifyMask, CurrentTime, code, 0,
 			systray->win, XEMBED_EMBEDDED_VERSION);
+}
+
+int
+systrayignored(Window w)
+{
+	XClassHint ch = { NULL, NULL };
+	unsigned int i;
+	int ignored = 0;
+
+	if (!XGetClassHint(dpy, w, &ch))
+		return 0;
+	for (i = 0; systrayignore[i]; i++)
+		if ((ch.res_name && !strcmp(ch.res_name, systrayignore[i]))
+		|| (ch.res_class && !strcmp(ch.res_class, systrayignore[i])))
+			ignored = 1;
+	if (ch.res_name)
+		XFree(ch.res_name);
+	if (ch.res_class)
+		XFree(ch.res_class);
+	return ignored;
 }
 
 void
