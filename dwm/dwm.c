@@ -84,7 +84,7 @@ enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, Schem
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
-       NetWMWindowTypeDialog, NetClientList, NetLast }; /* EWMH atoms */
+       NetWMWindowTypeDialog, NetClientList, DwmClientInfo, DwmFocusClient, NetLast }; /* EWMH atoms */
 enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
@@ -269,6 +269,7 @@ static void unmapnotify(XEvent *e);
 static void updatebarpos(Monitor *m);
 static void updatebars(void);
 static void updateclientlist(void);
+static void publishclientinfo(void);
 static int updategeom(void);
 static void updatenumlockmask(void);
 static void updatesizehints(Client *c);
@@ -518,6 +519,7 @@ arrange(Monitor *m)
 		restack(m);
 	} else for (m = mons; m; m = m->next)
 		arrangemon(m);
+	publishclientinfo();
 }
 
 void
@@ -727,6 +729,20 @@ clientmessage(XEvent *e)
 	} else if (cme->message_type == netatom[NetActiveWindow]) {
 		if (c != selmon->sel && !c->isurgent)
 			seturgent(c, 1);
+	} else if (cme->message_type == netatom[DwmFocusClient]) {
+		/* dock request: go to the client's monitor and tag, then focus it */
+		unsigned int t = c->tags & TAGMASK;
+		if (!t)
+			return;
+		if (c->mon != selmon) {
+			unfocus(selmon->sel, 0);
+			selmon = c->mon;
+		}
+		if (!ISVISIBLE(c))
+			view(&(Arg){.ui = t & -t});
+		focus(c);
+		restack(selmon);
+		XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
 	}
 }
 
@@ -1652,48 +1668,54 @@ void
 saveSession(void)
 {
 	FILE *fw = fopen(SESSION_FILE, "w");
-	for (Client *c = selmon->clients; c != NULL; c = c->next) { // get all the clients with their tags and write them to the file
-		fprintf(fw, "%lu %u\n", c->win, c->tags);
-	}
+	if (!fw)
+		return;
+	/* window id, tags, monitor number */
+	for (Monitor *m = mons; m; m = m->next)
+		for (Client *c = m->clients; c != NULL; c = c->next)
+			fprintf(fw, "%lu %u %d\n", c->win, c->tags, m->num);
 	fclose(fw);
 }
 
 void
 restoreSession(void)
 {
-	// restore session
+	char line[128];
+	Monitor *m;
 	FILE *fr = fopen(SESSION_FILE, "r");
 	if (!fr)
 		return;
 
-	char *str = malloc(23 * sizeof(char)); // allocate enough space for excepted input from text file
-	while (fscanf(fr, "%[^\n] ", str) != EOF) { // read file till the end
-		long unsigned int winId;
+	while (fgets(line, sizeof line, fr)) {
+		unsigned long winId;
 		unsigned int tagsForWin;
-		int check = sscanf(str, "%lu %u", &winId, &tagsForWin); // get data
-		if (check != 2) // break loop if data wasn't read correctly
+		int monNum;
+		Monitor *target;
+		Client *c;
+
+		if (sscanf(line, "%lu %u %d", &winId, &tagsForWin, &monNum) != 3)
 			break;
-
-		for (Client *c = selmon->clients; c ; c = c->next) { // add tags to every window by winId
-			if (c->win == winId) {
-				c->tags = tagsForWin;
-				break;
-			}
+		if (!(c = wintoclient(winId)))
+			continue;
+		for (target = mons; target && target->num != monNum; target = target->next) ;
+		if (target && target != c->mon) { /* move back to its old monitor */
+			detach(c);
+			detachstack(c);
+			c->mon = target;
+			attach(c);
+			attachstack(c);
 		}
-    }
-
-	for (Client *c = selmon->clients; c ; c = c->next) { // refocus on windows
-		focus(c);
-		restack(c->mon);
+		c->tags = tagsForWin;
 	}
-
-	for (Monitor *m = selmon; m; m = m->next) // rearrange all monitors
-		arrange(m);
-
-	free(str);
 	fclose(fr);
 
-	// delete a file
+	for (m = mons; m; m = m->next) /* refocus on windows */
+		for (Client *c = m->clients; c; c = c->next) {
+			focus(c);
+			restack(c->mon);
+		}
+
+	arrange(NULL); /* rearrange all monitors */
 	remove(SESSION_FILE);
 }
 
@@ -2230,6 +2252,8 @@ setup(void)
 	netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
 	netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
 	netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
+	netatom[DwmClientInfo] = XInternAtom(dpy, "_DWM_CLIENT_INFO", False);
+	netatom[DwmFocusClient] = XInternAtom(dpy, "_DWM_FOCUS_CLIENT", False);
 	xatom[Manager] = XInternAtom(dpy, "MANAGER", False);
 	xatom[Xembed] = XInternAtom(dpy, "_XEMBED", False);
 	xatom[XembedInfo] = XInternAtom(dpy, "_XEMBED_INFO", False);
@@ -2606,6 +2630,24 @@ updatebarpos(Monitor *m)
 		m->wy = m->topbar ? m->wy + bh : m->wy;
 	} else
 		m->by = -bh;
+}
+
+/* per client: _DWM_CLIENT_INFO = { tag mask, monitor x, monitor y } */
+void
+publishclientinfo(void)
+{
+	Client *c;
+	Monitor *m;
+	long info[3];
+
+	for (m = mons; m; m = m->next)
+		for (c = m->clients; c; c = c->next) {
+			info[0] = c->tags & TAGMASK;
+			info[1] = m->mx;
+			info[2] = m->my;
+			XChangeProperty(dpy, c->win, netatom[DwmClientInfo], XA_CARDINAL, 32,
+				PropModeReplace, (unsigned char *)info, 3);
+		}
 }
 
 void

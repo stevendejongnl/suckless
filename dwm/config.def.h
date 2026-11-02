@@ -132,7 +132,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "alacritty", "-e", "tmux", "new-session", "-A", "-s", "main", NULL };
+static const char *termcmd[]  = { "alacritty", "-e", "/home/stevendejong/.local/bin/tmux-main", NULL };
 static const char *termtwocmd[]	 = { "alacritty", "-e", "tmux", NULL };
 static const char *scratchpadcmd[] = {
 	"alacritty", "--class", scratchpadname,
@@ -223,8 +223,8 @@ static const Key keys[] = {
 	// Zoom into master
 	// Zoom active window to master
 	{ MODKEY,			XK_Return,	zoom,		{0} },
-	// Toggle to previous layout
-	{ MODKEY,			XK_Tab,		view,		{0} },
+	// Toggle to previous tag (Super+Tab is taken by dwm-dock)
+	{ MODKEY|ControlMask,		XK_Tab,		view,		{0} },
 
 	// Quit window
 	// Kill active window
