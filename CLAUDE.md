@@ -44,12 +44,28 @@ dwm binds the `XF86Audio*` keys in `config.def.h`. Bluetooth headphones send the
 | Key                | Command                      |
 |--------------------|------------------------------|
 | `XF86AudioPlay`    | `playerctl play-pause`       |
+| `XF86AudioPause`   | `playerctl pause`            |
 | `XF86AudioNext`    | `playerctl next`             |
 | `XF86AudioPrev`    | `playerctl previous`         |
 | Volume up / down   | `pamixer --increase/--decrease 5` |
 | Mute               | `pamixer --toggle-mute`      |
 
 `playerctl` controls any MPRIS player, for example Spotify. Check the headphone buttons with `evtest` on the `(AVRCP)` device in `/dev/input`.
+
+### Tag 9: YouTube or Spotify
+
+Tag 9 holds YouTube (a Chromium app window) or Spotify, never both.
+
+- `Mod+9` runs `~/.local/bin/tag9-media`: it jumps to the open YouTube or Spotify window, or shows a yad popup (class `claude-git-guard`, so dwm floats it) with a Spotify and a YouTube button when neither is open.
+- When one of them opens, dwm closes the other (`closesharedtagapps`). The class is read again on `WM_CLASS` changes, because Spotify sets it after the window is mapped.
+- The tag is green while Spotify plays and red while a YouTube window is open. It looks normal when neither is active.
+- Spotify's play state comes from `~/.dwm/statusbar/shared-tag-playing.sh`. It writes `playing` or `stopped` to `~/.local/state/dwm-shared-tag-playing`, and dwm reads the file on each status update (once per second).
+- The apps, their tag colours and the playing requirement are the `sharedtagapps` table in `config.def.h`.
+
+Moving a window to another monitor (`Mod+Shift+,` and `Mod+Shift+.`) goes through `sendmon`:
+
+- A fullscreen window is resized to the new monitor. `showhide` skips fullscreen clients, so without this the window stays drawn on the old monitor.
+- A YouTube or Spotify window keeps tag 9, and the target monitor switches to tag 9 (`viewonmonitor`) so the window stays visible. Other windows take the tags the target monitor shows.
 
 ### Window memory
 

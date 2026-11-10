@@ -3,6 +3,7 @@
 #define SESSION_FILE "/tmp/dwm-session"
 /* last tag and monitor per window class, relative to $HOME; survives logout */
 #define MEMORY_FILE ".local/state/dwm-windows"
+#define SHARED_TAG_PLAYING_FILE ".local/state/dwm-shared-tag-playing"
 
 /* appearance */
 static const unsigned int borderpx  = 3;	/* border pixel of windows */
@@ -59,13 +60,15 @@ static const char *colors[][3]	    = {
 	[SchemeStatusSuccess]  = { col_status_success,	col_gray1, col_gray2 },
 	[SchemeStatusBadgeOn]  = { col_gray1,		col_status_success, col_gray2 },
 	[SchemeStatusBadgeOff] = { col_gray3,		col_gray2, col_gray2 },
+	[SchemeBadgeRed]       = { col_gray1,		col_status_critical, col_gray2 },
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "\xe2\x96\xb6" }; /* tag 9: YouTube, play triangle (U+25B6) */
+static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "\xe2\x96\xb6" }; /* tag 9: YouTube or Spotify, play triangle (U+25B6) */
 static const char scratchpadname[] = "scratchpad";
 
 #define TAG_MASK(n) (1 << ((n) - 1))
+#define SHARED_TAG TAG_MASK(9) /* YouTube and Spotify share this tag */
 #define TAG_ALL (~0)
 static const Rule rules[] = {
 	/* xprop(1):
@@ -77,7 +80,8 @@ static const Rule rules[] = {
     {"Alacritty",       NULL,      NULL,           0,               0,           1,           0,         -1},
     {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {NULL,	"qemu-system-x86_64", NULL,	    TAG_MASK(8),     1,           0,           1,         -1},
-    {NULL,	"www.youtube.com", NULL,	    TAG_MASK(9),     0,           0,           1,         -1},
+    {NULL,	"www.youtube.com", NULL,	    SHARED_TAG,      0,           0,           1,         -1},
+    {"Spotify",	NULL,	    NULL,		    SHARED_TAG,      0,           0,           1,         -1},
     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Bitwarden",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
@@ -88,6 +92,14 @@ static const Rule rules[] = {
     {"flameshot",       NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {NULL,		NULL,	    "DWM Overlay",	    TAG_ALL,	     1,           0,           1,         -1},
     {NULL,		NULL,	    "Picture in picture",   TAG_ALL,	     1,           0,           1,         -1},
+};
+
+/* apps that share SHARED_TAG: when one opens, the other one closes. class and instance are substring matches.
+ * The tag takes the scheme while the app is active: green for Spotify while it plays, red for YouTube. */
+static const SharedTagApp sharedtagapps[] = {
+	/* class	instance		tag scheme		needsplaying */
+	{ NULL,		"www.youtube.com",	SchemeBadgeRed,		0 },
+	{ "Spotify",	NULL,			SchemeStatusBadgeOn,	1 },
 };
 
 /* layout(s) */
@@ -134,6 +146,7 @@ static const Layout layouts[] = {
 #define XF86AudioMute 0x1008ff12
 #define XF86AudioRaiseVolume 0x1008ff13
 #define XF86AudioPlay 0x1008ff14
+#define XF86AudioPause 0x1008ff31
 #define XF86AudioPrev 0x1008ff16
 #define XF86AudioNext 0x1008ff17
 #define XF86Messenger 0x1008ff8e
@@ -314,6 +327,8 @@ static const Key keys[] = {
 	{ 0,				XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5") },
 	// Play or pause media
 	{ 0,				XF86AudioPlay, spawn, SHCMD("playerctl play-pause") },
+	// Pause media (headphones send pause and play as separate keys)
+	{ 0,				XF86AudioPause, spawn, SHCMD("playerctl pause") },
 	// Previous track
 	{ 0,				XF86AudioPrev, spawn, SHCMD("playerctl previous") },
 	// Next track
@@ -339,8 +354,8 @@ static const Key keys[] = {
 	TAGKEYS_ALT(			XK_3,			6)
 	TAGKEYS_ALT(			XK_4,			7)
 
-	// YouTube: focus the fullscreen app window, or open it
-	{ MODKEY,			XK_9,		spawn,		SHCMD("/home/stevendejong/.local/bin/youtube-fullscreen") },
+	// Tag 9: go to the open YouTube or Spotify window, or ask which one to open (yad popup)
+	{ MODKEY,			XK_9,		spawn,		SHCMD("/home/stevendejong/.local/bin/tag9-media") },
 
 	// Quit DWM
 	// Quit DWM

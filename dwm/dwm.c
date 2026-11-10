@@ -80,7 +80,7 @@
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm,
        SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess,
-       SchemeStatusBadgeOn, SchemeStatusBadgeOff }; /* color schemes */
+       SchemeStatusBadgeOn, SchemeStatusBadgeOff, SchemeBadgeRed }; /* color schemes, SchemeBadgeRed has no status escape */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -176,6 +176,13 @@ typedef struct {
 	int monitor;
 } Rule;
 
+typedef struct {
+	const char *class;
+	const char *instance;
+	int scheme; /* tag color while the app is active */
+	int needsplaying; /* active only while the status bar script reports playing */
+} SharedTagApp;
+
 typedef struct Systray	 Systray;
 struct Systray {
 	Window win;
@@ -219,6 +226,16 @@ static void grabkeys(void);
 static void incnmaster(const Arg *arg);
 static void keypress(XEvent *e);
 static void killclient(const Arg *arg);
+static void closeclient(Client *c);
+static int sharedtagappindex(Client *c);
+static void closesharedtagapps(Client *keep);
+static void updateclass(Client *c);
+static int sharedtagplaying; /* a shared tag app is playing, see readsharedtagplaying */
+static int sharedtagscheme(void);
+static int tagschemeindex(Monitor *m, unsigned int i, int sharedscheme);
+static int readsharedtagplaying(void);
+static void updatesharedtagplaying(void);
+static void viewonmonitor(Monitor *m, unsigned int tags);
 static void manage(Window w, XWindowAttributes *wa);
 static void mappingnotify(XEvent *e);
 static void maprequest(XEvent *e);
@@ -969,6 +986,7 @@ drawbar(Monitor *m)
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
+	int sharedscheme;
 	Client *c;
 
 	if (!m->showbar)
@@ -1062,9 +1080,10 @@ drawbar(Monitor *m)
 			urg |= c->tags;
 	}
 	x = 0;
+	sharedscheme = sharedtagscheme();
 	for (i = 0; i < LENGTH(tags); i++) {
 		w = TEXTW(tags[i]);
-		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeTagsSel : SchemeTagsNorm]);
+		drw_setscheme(drw, scheme[tagschemeindex(m, i, sharedscheme)]);
 		drw_text(drw, x, 0, w, bh, lrpad / 2, tags[i], urg & 1 << i);
 		if (occ & 1 << i)
 			drw_rect(drw, x + boxs, boxs, boxw, boxw,
@@ -1401,20 +1420,144 @@ keypress(XEvent *e)
 }
 
 void
+closeclient(Client *c)
+{
+	if (sendevent(c->win, wmatom[WMDelete], NoEventMask, wmatom[WMDelete], CurrentTime, 0 , 0, 0))
+		return;
+	XGrabServer(dpy);
+	XSetErrorHandler(xerrordummy);
+	XSetCloseDownMode(dpy, DestroyAll);
+	XKillClient(dpy, c->win);
+	XSync(dpy, False);
+	XSetErrorHandler(xerror);
+	XUngrabServer(dpy);
+}
+
+void
 killclient(const Arg *arg)
 {
 	if (!selmon->sel)
 		return;
+	closeclient(selmon->sel);
+}
 
-	if (!sendevent(selmon->sel->win, wmatom[WMDelete], NoEventMask, wmatom[WMDelete], CurrentTime, 0 , 0, 0)) {
-		XGrabServer(dpy);
-		XSetErrorHandler(xerrordummy);
-		XSetCloseDownMode(dpy, DestroyAll);
-		XKillClient(dpy, selmon->sel->win);
-		XSync(dpy, False);
-		XSetErrorHandler(xerror);
-		XUngrabServer(dpy);
-	}
+/* 1-based position of the client in sharedtagapps, 0 when it is not a shared tag app */
+int
+sharedtagappindex(Client *c)
+{
+	unsigned int i;
+
+	for (i = 0; i < LENGTH(sharedtagapps); i++)
+		if ((!sharedtagapps[i].class || strstr(c->rclass, sharedtagapps[i].class))
+		&& (!sharedtagapps[i].instance || strstr(c->rinstance, sharedtagapps[i].instance)))
+			return i + 1;
+	return 0;
+}
+
+/* close the shared tag apps that differ from keep, a second window of the same app stays */
+void
+closesharedtagapps(Client *keep)
+{
+	Client *c;
+	Monitor *m;
+	int keepindex = sharedtagappindex(keep);
+
+	if (!keepindex)
+		return;
+	for (m = mons; m; m = m->next)
+		for (c = m->clients; c; c = c->next)
+			if (c != keep && sharedtagappindex(c) && sharedtagappindex(c) != keepindex)
+				closeclient(c);
+}
+
+/* read the class hint again, apps like Spotify set it after the window is mapped */
+void
+updateclass(Client *c)
+{
+	XClassHint ch = { NULL, NULL };
+	int wasshared = sharedtagappindex(c);
+
+	if (!XGetClassHint(dpy, c->win, &ch))
+		return;
+	snprintf(c->rclass, sizeof c->rclass, "%s", ch.res_class ? ch.res_class : "");
+	snprintf(c->rinstance, sizeof c->rinstance, "%s", ch.res_name ? ch.res_name : "");
+	if (ch.res_class)
+		XFree(ch.res_class);
+	if (ch.res_name)
+		XFree(ch.res_name);
+	if (wasshared || !sharedtagappindex(c))
+		return;
+	c->tags = SHARED_TAG;
+	closesharedtagapps(c);
+	arrange(c->mon);
+}
+
+/* scheme for the shared tag while one of its apps is active, -1 when none is */
+int
+sharedtagscheme(void)
+{
+	Client *c;
+	Monitor *m;
+	int index;
+
+	for (m = mons; m; m = m->next)
+		for (c = m->clients; c; c = c->next) {
+			index = sharedtagappindex(c);
+			if (!index)
+				continue;
+			if (!sharedtagapps[index - 1].needsplaying || sharedtagplaying)
+				return sharedtagapps[index - 1].scheme;
+		}
+	return -1;
+}
+
+int
+tagschemeindex(Monitor *m, unsigned int i, int sharedscheme)
+{
+	if ((1 << i) == SHARED_TAG && sharedscheme >= 0)
+		return sharedscheme;
+	return m->tagset[m->seltags] & 1 << i ? SchemeTagsSel : SchemeTagsNorm;
+}
+
+/* the status bar script writes "playing" to this file while a shared tag app plays */
+int
+readsharedtagplaying(void)
+{
+	char path[512], line[16] = "";
+	const char *home = getenv("HOME");
+	FILE *f;
+
+	if (!home)
+		return 0;
+	snprintf(path, sizeof path, "%s/%s", home, SHARED_TAG_PLAYING_FILE);
+	if (!(f = fopen(path, "r")))
+		return 0;
+	if (!fgets(line, sizeof line, f))
+		line[0] = '\0';
+	fclose(f);
+	return !strncmp(line, "playing", 7);
+}
+
+/* view tags on a monitor that is not the selected one */
+void
+viewonmonitor(Monitor *m, unsigned int tags)
+{
+	Monitor *previous = selmon;
+
+	selmon = m;
+	view(&(Arg){.ui = tags});
+	selmon = previous;
+}
+
+void
+updatesharedtagplaying(void)
+{
+	int playing = readsharedtagplaying();
+
+	if (playing == sharedtagplaying)
+		return;
+	sharedtagplaying = playing;
+	drawbars();
 }
 
 void
@@ -1444,6 +1587,7 @@ manage(Window w, XWindowAttributes *wa)
 		applyrules(c);
 		term = termforwin(c);
 	}
+	closesharedtagapps(c);
 
 	if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
 		c->x = c->mon->wx + c->mon->ww - WIDTH(c);
@@ -1672,6 +1816,9 @@ propertynotify(XEvent *e)
 		case XA_WM_HINTS:
 			updatewmhints(c);
 			drawbars();
+			break;
+		case XA_WM_CLASS:
+			updateclass(c);
 			break;
 		}
 		if (ev->atom == XA_WM_NAME || ev->atom == netatom[NetWMName]) {
@@ -2214,11 +2361,17 @@ sendmon(Client *c, Monitor *m)
 	detach(c);
 	detachstack(c);
 	c->mon = m;
-	c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
+	/* shared tag apps keep their tag, other clients get the tags of the target monitor */
+	c->tags = sharedtagappindex(c) ? SHARED_TAG : m->tagset[m->seltags];
+	/* showhide skips fullscreen clients, so move them onto the target monitor here */
+	if (c->isfullscreen)
+		resizeclient(c, m->mx, m->my, m->mw, m->mh);
 	rememberclient(c);
 	savememory();
 	attach(c);
 	attachstack(c);
+	if (sharedtagappindex(c))
+		viewonmonitor(m, SHARED_TAG);
 	focus(NULL);
 	arrange(NULL);
 }
@@ -2972,6 +3125,7 @@ updatestatus(void)
 		}
 		statusw += TEXTW(text) - lrpad + 2;
 	}
+	updatesharedtagplaying();
 	drawbar(selmon);
 	updatesystray();
 }
