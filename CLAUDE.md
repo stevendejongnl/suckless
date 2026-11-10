@@ -204,7 +204,7 @@ All tools are extremely lightweight:
 - Must run `make [tool]` from repo root, not from tool subdirectory
 
 **Patches failing to apply**:
-- Check that dwm source is at expected version (6.5)
+- Check that dwm source is at expected version (6.8)
 - Verify patch file path and format
 - Some patches may conflict if applied in different order
 
