@@ -1,6 +1,8 @@
 /* See LICENSE file for copyright and license details. */
 
 #define SESSION_FILE "/tmp/dwm-session"
+/* last tag and monitor per window class, relative to $HOME; survives logout */
+#define MEMORY_FILE ".local/state/dwm-windows"
 
 /* appearance */
 static const unsigned int borderpx  = 3;	/* border pixel of windows */

@@ -108,6 +108,7 @@ typedef struct Monitor Monitor;
 typedef struct Client Client;
 struct Client {
 	char name[256];
+	char rclass[128], rinstance[128]; /* class hint, for window memory */
 	float mina, maxa;
 	int x, y, w, h;
 	int oldx, oldy, oldw, oldh;
@@ -238,6 +239,11 @@ static void restack(Monitor *m);
 static void run(void);
 static void runautostart(void);
 static void scan(void);
+static void loadmemory(void);
+static void savememory(void);
+static void rememberclient(Client *c);
+static void rememberall(void);
+static int recallclient(Client *c, int keepmon);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
@@ -408,6 +414,7 @@ applyrules(Client *c)
 	unsigned int i;
 	const Rule *r;
 	Monitor *m;
+	int rulemon = 0;
 	XClassHint ch = { NULL, NULL };
 
 	/* rule matching */
@@ -428,10 +435,19 @@ applyrules(Client *c)
 			c->isfloating = r->isfloating;
 			c->tags |= r->tags;
 			for (m = mons; m && m->num != r->monitor; m = m->next);
-			if (m)
+			if (m) {
 				c->mon = m;
+				rulemon = 1;
+			}
 		}
 	}
+	if (ch.res_class && ch.res_name) {
+		snprintf(c->rclass, sizeof c->rclass, "%s", ch.res_class);
+		snprintf(c->rinstance, sizeof c->rinstance, "%s", ch.res_name);
+	}
+	/* no rule picked a tag: fall back to where this window was last seen */
+	if (!(c->tags & TAGMASK) && !c->isterminal)
+		recallclient(c, rulemon);
 	if (ch.res_class)
 		XFree(ch.res_class);
 	if (ch.res_name)
@@ -1667,6 +1683,119 @@ propertynotify(XEvent *e)
 	}
 }
 
+typedef struct {
+	char class[128], instance[128];
+	unsigned int tags;
+	int mx, my; /* origin of the monitor, which stays stable when others come and go */
+} Memory;
+
+#define MEMORY_MAX 256
+static Memory memory[MEMORY_MAX];
+static int nmemory;
+
+static const char *
+memorypath(void)
+{
+	static char path[512];
+	const char *home = getenv("HOME");
+
+	if (!home)
+		return NULL;
+	snprintf(path, sizeof path, "%s/%s", home, MEMORY_FILE);
+	return path;
+}
+
+void
+loadmemory(void)
+{
+	const char *path = memorypath();
+	char line[512];
+	Memory e;
+	FILE *fr;
+
+	if (!path || !(fr = fopen(path, "r")))
+		return;
+	while (nmemory < MEMORY_MAX && fgets(line, sizeof line, fr))
+		if (sscanf(line, "%u\t%d\t%d\t%127[^\t]\t%127[^\n]",
+		    &e.tags, &e.mx, &e.my, e.class, e.instance) == 5)
+			memory[nmemory++] = e;
+	fclose(fr);
+}
+
+void
+savememory(void)
+{
+	const char *path = memorypath();
+	char tmp[520];
+	FILE *fw;
+	int i;
+
+	if (!path)
+		return;
+	snprintf(tmp, sizeof tmp, "%s.tmp", path);
+	if (!(fw = fopen(tmp, "w")))
+		return;
+	for (i = 0; i < nmemory; i++)
+		fprintf(fw, "%u\t%d\t%d\t%s\t%s\n", memory[i].tags,
+			memory[i].mx, memory[i].my, memory[i].class, memory[i].instance);
+	if (fclose(fw) == 0)
+		rename(tmp, path);
+}
+
+void
+rememberclient(Client *c)
+{
+	Memory *e;
+	int i;
+
+	if (c->isterminal || !c->rclass[0] || !c->mon)
+		return;
+	for (i = 0; i < nmemory; i++)
+		if (!strcmp(memory[i].class, c->rclass) && !strcmp(memory[i].instance, c->rinstance))
+			break;
+	if (i == MEMORY_MAX)
+		return;
+	e = &memory[i];
+	if (i == nmemory)
+		nmemory++;
+	snprintf(e->class, sizeof e->class, "%s", c->rclass);
+	snprintf(e->instance, sizeof e->instance, "%s", c->rinstance);
+	e->tags = c->tags & TAGMASK;
+	e->mx = c->mon->mx;
+	e->my = c->mon->my;
+}
+
+void
+rememberall(void)
+{
+	Monitor *m;
+	Client *c;
+
+	for (m = mons; m; m = m->next)
+		for (c = m->clients; c; c = c->next)
+			rememberclient(c);
+	savememory();
+}
+
+int
+recallclient(Client *c, int keepmon)
+{
+	Monitor *m;
+	int i;
+
+	for (i = 0; i < nmemory; i++) {
+		if (strcmp(memory[i].class, c->rclass) || strcmp(memory[i].instance, c->rinstance))
+			continue;
+		if (!keepmon) { /* monitor gone: use the first (main) one */
+			for (m = mons; m && (m->mx != memory[i].mx || m->my != memory[i].my); m = m->next);
+			c->mon = m ? m : mons;
+		}
+		c->tags = memory[i].tags;
+		return 1;
+	}
+	return 0;
+}
+
 void
 saveSession(void)
 {
@@ -2085,6 +2214,8 @@ sendmon(Client *c, Monitor *m)
 	detachstack(c);
 	c->mon = m;
 	c->tags = m->tagset[m->seltags]; /* assign tags of target monitor */
+	rememberclient(c);
+	savememory();
 	attach(c);
 	attachstack(c);
 	focus(NULL);
@@ -2391,6 +2522,8 @@ tag(const Arg *arg)
 {
 	if (selmon->sel && arg->ui & TAGMASK) {
 		selmon->sel->tags = arg->ui & TAGMASK;
+		rememberclient(selmon->sel);
+		savememory();
 		focus(NULL);
 		arrange(selmon);
 	}
@@ -2486,6 +2619,8 @@ toggletag(const Arg *arg)
 	newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
 	if (newtags) {
 		selmon->sel->tags = newtags;
+		rememberclient(selmon->sel);
+		savememory();
 		focus(NULL);
 		arrange(selmon);
 	}
@@ -2546,6 +2681,9 @@ unmanage(Client *c, int destroyed)
 	Client *s;
 	Monitor *m = c->mon;
 	XWindowChanges wc;
+
+	rememberclient(c);
+	savememory();
 
 	if (c->swallowing)
 		unswallow(c);
@@ -3303,10 +3441,12 @@ main(int argc, char *argv[])
 	if (pledge("stdio rpath proc exec ps", NULL) == -1)
 		die("pledge");
 #endif /* __OpenBSD__ */
+	loadmemory();
 	scan();
 	restoreSession();
 	runautostart();
 	run();
+	rememberall();
 	if(restart) execvp(argv[0], argv);
 	cleanup();
 	XCloseDisplay(dpy);
