@@ -58,7 +58,7 @@ static const char *colors[][3]	    = {
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8" };
+static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 static const char scratchpadname[] = "scratchpad";
 
 #define TAG_MASK(n) (1 << ((n) - 1))
@@ -73,6 +73,7 @@ static const Rule rules[] = {
     {"Alacritty",       NULL,      NULL,           0,               0,           1,           0,         -1},
     {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {NULL,	"qemu-system-x86_64", NULL,	    TAG_MASK(8),     1,           0,           1,         -1},
+    {NULL,	"www.youtube.com", NULL,	    TAG_MASK(9),     0,           0,           1,         -1},
     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Bitwarden",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
