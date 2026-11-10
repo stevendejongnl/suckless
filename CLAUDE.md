@@ -35,6 +35,12 @@ Each target removes existing `config.h`, regenerates from `config.def.h`, and ru
 
 The restart keybind picks up the new `/usr/local/bin/dwm` and keeps open windows/tags/layouts via `/tmp/dwm-session`.
 
+From a shell, restart the same way with `kill -HUP $(pgrep -x dwm)`. Never use `SIGUSR1`: dwm has no handler, it just dies, nothing is saved and every window falls back to tag 1.
+
+### Window memory
+
+dwm remembers the last tag and monitor per window class + instance in `~/.local/state/dwm-windows` (`MEMORY_FILE`). A new window with no rule tag opens there, also after logout. Rules win, terminals are skipped, and if the saved monitor is gone the first monitor is used (monitors are matched by their x,y origin).
+
 ## Configuration System
 
 All three tools use the **suckless config.h pattern**:
