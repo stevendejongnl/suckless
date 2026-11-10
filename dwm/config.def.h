@@ -58,7 +58,7 @@ static const char *colors[][3]	    = {
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8" };
 static const char scratchpadname[] = "scratchpad";
 
 #define TAG_MASK(n) (1 << ((n) - 1))
@@ -72,13 +72,12 @@ static const Rule rules[] = {
     {scratchpadname,    NULL,      NULL,           TAG_ALL,         1,           1,           -1,        -1},
     {"Alacritty",       NULL,      NULL,           0,               0,           1,           0,         -1},
     {"Gcr-prompter",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
-    {NULL,	"qemu-system-x86_64", NULL,	    TAG_MASK(9),     1,           0,           1,         -1},
+    {NULL,	"qemu-system-x86_64", NULL,	    TAG_MASK(8),     1,           0,           1,         -1},
     {"Lxpolkit",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"1Password",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Bitwarden",	NULL,	    NULL,		    TAG_ALL,	     0,           0,           1,         -1},
     {"Slack",		NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
     {"Wasistlos",	NULL,	    NULL,		    TAG_MASK(1),     0,           0,           1,          1},
-    {"Moonlight",	NULL,	    NULL,		    TAG_MASK(9),     0,           0,           1,          0},
     {"claude-git-guard",NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {"Gkrellm",         NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
     {"flameshot",       NULL,   NULL,               TAG_ALL,         1,           0,           1,         -1},
@@ -116,6 +115,12 @@ static const Layout layouts[] = {
 	{ MODKEY | ControlMask,		    KEY,      toggleview,     {.ui = 1 << TAG} }, \
 	{ MODKEY | ShiftMask,		    KEY,      tag,	      {.ui = 1 << TAG} }, \
 	{ MODKEY | ControlMask | ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
+/* one-handed alternative: Mod+Alt+1-4 reaches tags 5-8 */
+#define TAGKEYS_ALT(KEY,TAG) \
+	{ MODKEY | Mod1Mask,				KEY,      view,	      {.ui = 1 << TAG} }, \
+	{ MODKEY | Mod1Mask | ControlMask,		KEY,      toggleview,     {.ui = 1 << TAG} }, \
+	{ MODKEY | Mod1Mask | ShiftMask,		KEY,      tag,	      {.ui = 1 << TAG} }, \
+	{ MODKEY | Mod1Mask | ControlMask | ShiftMask,	KEY,      toggletag,      {.ui = 1 << TAG} },
 
 #define XF86MonBrightnessDown 0x1008ff02
 #define XF86MonBrightnessUp 0x1008ff03
@@ -314,7 +319,10 @@ static const Key keys[] = {
 	TAGKEYS(			XK_6,			5)
 	TAGKEYS(			XK_7,			6)
 	TAGKEYS(			XK_8,			7)
-	TAGKEYS(			XK_9,			8)
+	TAGKEYS_ALT(			XK_1,			4)
+	TAGKEYS_ALT(			XK_2,			5)
+	TAGKEYS_ALT(			XK_3,			6)
+	TAGKEYS_ALT(			XK_4,			7)
 
 	// Quit DWM
 	// Quit DWM
