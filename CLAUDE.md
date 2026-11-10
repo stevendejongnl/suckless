@@ -37,6 +37,20 @@ The restart keybind picks up the new `/usr/local/bin/dwm` and keeps open windows
 
 From a shell, restart the same way with `kill -HUP $(pgrep -x dwm)`. Never use `SIGUSR1`: dwm has no handler, it just dies, nothing is saved and every window falls back to tag 1.
 
+### Media and volume keys
+
+dwm binds the `XF86Audio*` keys in `config.def.h`. Bluetooth headphones send their buttons as the same keys, through an AVRCP input device.
+
+| Key                | Command                      |
+|--------------------|------------------------------|
+| `XF86AudioPlay`    | `playerctl play-pause`       |
+| `XF86AudioNext`    | `playerctl next`             |
+| `XF86AudioPrev`    | `playerctl previous`         |
+| Volume up / down   | `pamixer --increase/--decrease 5` |
+| Mute               | `pamixer --toggle-mute`      |
+
+`playerctl` controls any MPRIS player, for example Spotify. Check the headphone buttons with `evtest` on the `(AVRCP)` device in `/dev/input`.
+
 ### Window memory
 
 dwm remembers the last tag and monitor per window class + instance in `~/.local/state/dwm-windows` (`MEMORY_FILE`). A new window with no rule tag opens there, also after logout. Rules win, terminals are skipped, and if the saved monitor is gone the first monitor is used (monitors are matched by their x,y origin).

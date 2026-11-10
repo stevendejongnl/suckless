@@ -133,6 +133,9 @@ static const Layout layouts[] = {
 #define XF86AudioLowerVolume 0x1008ff11
 #define XF86AudioMute 0x1008ff12
 #define XF86AudioRaiseVolume 0x1008ff13
+#define XF86AudioPlay 0x1008ff14
+#define XF86AudioPrev 0x1008ff16
+#define XF86AudioNext 0x1008ff17
 #define XF86Messenger 0x1008ff8e
 #define XF86Favorite 0x1008ff30
 #define XF86WLAN 0x1008ff95
@@ -309,6 +312,12 @@ static const Key keys[] = {
 	{ 0,				XF86AudioMute, spawn, SHCMD("pamixer --toggle-mute") },
 	// Raise volume
 	{ 0,				XF86AudioRaiseVolume, spawn, SHCMD("pamixer --increase 5") },
+	// Play or pause media
+	{ 0,				XF86AudioPlay, spawn, SHCMD("playerctl play-pause") },
+	// Previous track
+	{ 0,				XF86AudioPrev, spawn, SHCMD("playerctl previous") },
+	// Next track
+	{ 0,				XF86AudioNext, spawn, SHCMD("playerctl next") },
 	// { 0,			XF86AudioMicMute, spawn, SHCMD ("pamixer --default-source --toggle-mute") },
 	// { 0,			XF86Messenger, spawn, SHCMD("") },
 	// { 0,			XF86Favorite, spawn, SHCMD("") },
