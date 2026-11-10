@@ -79,7 +79,8 @@
 /* enums */
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm,
-       SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess }; /* color schemes */
+       SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess,
+       SchemeStatusBadgeOn, SchemeStatusBadgeOff }; /* color schemes */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -363,7 +364,7 @@ static unsigned int scratchtag = 1 << LENGTH(tags);
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
-/* Calculate status bar width excluding control codes (0x01-0x0C) that don't render */
+/* Calculate status bar width excluding control codes (0x01-0x0E) that don't render */
 static unsigned int
 calculate_status_width(const char *text)
 {
@@ -374,8 +375,8 @@ calculate_status_width(const char *text)
 	size_t seglen;
 
 	while (*ts) {
-		/* Check if current byte is a color code (0x01-0x0C) or statuscmd (0x10-0x1F) */
-		if (((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) ||
+		/* Check if current byte is a color code (0x01-0x0E) or statuscmd (0x10-0x1F) */
+		if (((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0E) ||
 		    ((unsigned char)*ts >= 0x10 && (unsigned char)*ts <= 0x1f)) {
 			/* Measure text segment up to this point */
 			if (tp < ts) {
@@ -996,8 +997,8 @@ drawbar(Monitor *m)
 
 		/* Parse and render status text with embedded color codes */
 		while (1) {
-			/* Check if current byte is a color code (0x01-0x0C) or statuscmd (0x10-0x1F) */
-			if ((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0C) {
+			/* Check if current byte is a color code (0x01-0x0E) or statuscmd (0x10-0x1F) */
+			if ((unsigned char)*ts >= 0x01 && (unsigned char)*ts <= 0x0E) {
 				ctmp = *ts;
 				*ts = '\0'; /* temporarily terminate string */
 
@@ -1014,8 +1015,8 @@ drawbar(Monitor *m)
 				/* Set color scheme based on escape code */
 				if (ctmp == 0x01) {
 					drw_setscheme(drw, scheme[SchemeStatusNorm]); /* reset to default */
-				} else if (ctmp >= 0x07 && ctmp <= 0x0C) {
-					/* Map 0x07-0x0C to SchemeStatusNorm through SchemeStatusSuccess */
+				} else if (ctmp >= 0x07 && ctmp <= 0x0E) {
+					/* Map 0x07-0x0E to SchemeStatusNorm through SchemeStatusBadgeOff */
 					drw_setscheme(drw, scheme[SchemeStatusNorm + (ctmp - 0x07)]);
 				}
 
@@ -2960,7 +2961,7 @@ updatestatus(void)
 				statusw += TEXTW(text) - lrpad;
 				*s = ch;
 				text = s + 1;
-			} else if ((unsigned char)(*s) >= 0x01 && (unsigned char)(*s) <= 0x0C) {
+			} else if ((unsigned char)(*s) >= 0x01 && (unsigned char)(*s) <= 0x0E) {
 				/* statuscolors bytes are also not rendered */
 				ch = *s;
 				*s = '\0';
