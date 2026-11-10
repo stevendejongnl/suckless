@@ -324,6 +324,9 @@ static const Key keys[] = {
 	TAGKEYS_ALT(			XK_3,			6)
 	TAGKEYS_ALT(			XK_4,			7)
 
+	// YouTube: focus the fullscreen app window, or open it
+	{ MODKEY,			XK_9,		spawn,		SHCMD("/home/stevendejong/.local/bin/youtube-fullscreen") },
+
 	// Quit DWM
 	// Quit DWM
 	{ MODKEY|ShiftMask,		XK_q,		quit,		{0} },
