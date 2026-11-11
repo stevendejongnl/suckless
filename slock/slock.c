@@ -22,6 +22,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrender.h>
 
 #include "arg.h"
 #include "util.h"
@@ -58,7 +59,7 @@ struct lock {
 	XftDraw *xd;
 	XftFont *ftime, *fdate, *finfo, *fpanic;
 	XftFont *fbsodbig, *fbsod, *fbsodsmall;
-	XftColor timec, datec, failc, whitec;
+	XftColor timec, datec, failc, whitec, dimc;
 	XftColor pc[PC_NUM];
 	unsigned long bsodpixel;
 	Visual *vis;
@@ -179,6 +180,9 @@ static long panicclock;
 static int panicking, panicbsod, bsodpct, bsodstop;
 /* seconds until the fake panic: panicafter, or $SLOCK_PANIC_AFTER when set (0 = off) */
 static unsigned int panicsecs;
+/* idle dimming: seconds until the lock screen is dimmed (0 = off), $SLOCK_DIM_AFTER overrides dimafter */
+static unsigned int dimsecs;
+static int dimmed;
 static unsigned int bsodseed;
 static long long bsodnext;
 static struct utsname panicuts;
@@ -910,6 +914,9 @@ draw(Display *dpy, struct xrandr *rr, struct lock *lock, int color, unsigned int
 		if (mons)
 			XRRFreeMonitors(mons);
 	}
+	if (dimmed && !panicking)
+		XRenderFillRectangle(dpy, PictOpOver, XftDrawPicture(lock->xd), &lock->dimc.color,
+		                     0, 0, lock->w, lock->h);
 	XCopyArea(dpy, lock->buf, lock->win, lock->gc, 0, 0, lock->w, lock->h, 0, 0);
 }
 
@@ -955,6 +962,9 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 			panicking = 1;
 			panicinit();
 			redraw(dpy, rr, locks, nscreens, oldc, failcount);
+		} else if (dimsecs && !dimmed && now - lastkey >= (long long)dimsecs * 1000) {
+			dimmed = 1;
+			redraw(dpy, rr, locks, nscreens, oldc, failcount);
 		} else if (clocknow / 60 != lastclock / 60) {
 			redraw(dpy, rr, locks, nscreens, oldc, failcount);
 		}
@@ -970,6 +980,11 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 
 		if (ev.type == KeyPress) {
 			lastkey = nowms();
+			if (dimmed) {
+				/* wake up: show the lock screen again, the key still counts as input */
+				dimmed = 0;
+				redraw(dpy, rr, locks, nscreens, oldc, failcount);
+			}
 			if (panicking) {
 				/* any key ends the panic, and is not part of the password */
 				panicking = 0;
@@ -1110,6 +1125,11 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	XftColorAllocName(dpy, lock->vis, lock->cmap, datecolor, &lock->datec);
 	XftColorAllocName(dpy, lock->vis, lock->cmap, colorname[FAILED], &lock->failc);
 	XftColorAllocName(dpy, lock->vis, lock->cmap, "#FFFFFF", &lock->whitec);
+	{
+		/* black at dimpercent opacity, drawn over the finished lock screen when dimmed */
+		XRenderColor dim = { 0, 0, 0, (unsigned short)(dimpercent * 65535 / 100) };
+		XftColorAllocValue(dpy, lock->vis, lock->cmap, &dim, &lock->dimc);
+	}
 	for (i = 0; i < PC_NUM; i++)
 		XftColorAllocName(dpy, lock->vis, lock->cmap, panicpalette[i], &lock->pc[i]);
 	XAllocNamedColor(dpy, lock->cmap, bsodcolor, &color, &dummy);
@@ -1226,6 +1246,8 @@ main(int argc, char **argv) {
 	{
 		const char *e = getenv("SLOCK_PANIC_AFTER");
 		panicsecs = (e && *e) ? (unsigned int)strtoul(e, NULL, 10) : panicafter;
+		e = getenv("SLOCK_DIM_AFTER");
+		dimsecs = (e && *e) ? (unsigned int)strtoul(e, NULL, 10) : dimafter;
 	}
 	loadbg();
 

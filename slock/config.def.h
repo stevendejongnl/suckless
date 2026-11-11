@@ -31,6 +31,11 @@ static const int barheight   = 4;
 /* fake panic after this many seconds without a key, 0 turns it off.
  * Any key ends it and shows the lock screen again.
  * It scrolls several kinds of Linux errors, and one start in eight is a Windows bluescreen. */
+/* dim the lock screen after this many seconds without a key, 0 turns it off. dimpercent is how
+ * much of the screen is covered with black (90 = 10% brightness left). Any key brings it back. */
+static const unsigned int dimafter = 0;
+static const unsigned int dimpercent = 90;
+
 static const unsigned int panicafter = 120;
 static const char *panicfont = "JetBrainsMono Nerd Font Mono:size=11";
 /* normal, warning, error, ok, info, dim */
