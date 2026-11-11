@@ -177,6 +177,8 @@ static int panicoops = 1, panicpause, panicpid;
 static const char *panicproc = "";
 static long panicclock;
 static int panicking, panicbsod, bsodpct, bsodstop;
+/* seconds until the fake panic: panicafter, or $SLOCK_PANIC_AFTER when set (0 = off) */
+static unsigned int panicsecs;
 static unsigned int bsodseed;
 static long long bsodnext;
 static struct utsname panicuts;
@@ -949,7 +951,7 @@ readpw(Display *dpy, struct xrandr *rr, struct lock **locks, int nscreens,
 		if (panicking) {
 			if (panicstep())
 				redraw(dpy, rr, locks, nscreens, oldc, failcount);
-		} else if (panicafter && now - lastkey >= (long long)panicafter * 1000) {
+		} else if (panicsecs && now - lastkey >= (long long)panicsecs * 1000) {
 			panicking = 1;
 			panicinit();
 			redraw(dpy, rr, locks, nscreens, oldc, failcount);
@@ -1221,6 +1223,10 @@ main(int argc, char **argv) {
 	if (setuid(duid) < 0)
 		die("slock: setuid: %s\n", strerror(errno));
 
+	{
+		const char *e = getenv("SLOCK_PANIC_AFTER");
+		panicsecs = (e && *e) ? (unsigned int)strtoul(e, NULL, 10) : panicafter;
+	}
 	loadbg();
 
 	/* check for Xrandr support */
