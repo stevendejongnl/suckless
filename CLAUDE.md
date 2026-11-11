@@ -93,7 +93,11 @@ slock reads that image as a raw 8-bit PPM (P6), so the script writes it with `-d
 
 On top of the image slock draws, with Xft, a clock and date on every monitor (`timefmt`, `datefmt`), a state bar (grey idle, cyan while typing, red after a wrong password) and the number of failed attempts. All of it is in `config.def.h`.
 
-After `panicafter` seconds (120) without a key, slock shows an endless fake kernel panic. Any key ends it and shows the lock screen again. That key is not part of the password. Set `panicafter` to 0 to turn it off.
+After `panicafter` seconds (120) without a key, slock shows an endless fake panic. Any key ends it and shows the lock screen again. That key is not part of the password. Set `panicafter` to 0 to turn it off.
+
+- One start in eight is a Windows bluescreen (sad face, climbing percentage, fake QR code, random stop code, starts over at 100%).
+- The other starts scroll Linux errors in colour (`panicpalette`): oops, NULL dereference, soft lockup, OOM killer, disk errors, a systemd boot failure and a machine check. When one scenario ends, the next one starts, never the same twice in a row. The scroll speed varies, with short stalls.
+- The scenarios are the `sc_*` functions in `slock.c`. Each adds one row per call and sets `panicdone` after its last row.
 
 To test without locking the real session, build a copy with a fixed test hash and no privilege drop, and run it on `Xvfb`.
 

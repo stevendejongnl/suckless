@@ -28,8 +28,18 @@ static const char *datefmt   = "%A %d %B %Y";
 static const int barwidth    = 320;
 static const int barheight   = 4;
 
-/* fake kernel panic after this many seconds without a key, 0 turns it off.
- * Any key ends it and shows the lock screen again. */
+/* fake panic after this many seconds without a key, 0 turns it off.
+ * Any key ends it and shows the lock screen again.
+ * It scrolls several kinds of Linux errors, and one start in eight is a Windows bluescreen. */
 static const unsigned int panicafter = 120;
-static const char *panicfont      = "JetBrainsMono Nerd Font Mono:size=11";
-static const char *panictextcolor = "#D3D6E6";
+static const char *panicfont = "JetBrainsMono Nerd Font Mono:size=11";
+/* normal, warning, error, ok, info, dim */
+static const char *panicpalette[] = {
+	"#D3D6E6", "#FFD473", "#FF5C78", "#7FD88F", "#3EE6E0", "#7A7F99",
+};
+
+/* the bluescreen */
+static const char *bsodcolor     = "#0078D7";
+static const char *bsodfontbig   = "sans-serif:size=96";
+static const char *bsodfont      = "sans-serif:size=24";
+static const char *bsodfontsmall = "sans-serif:size=13";
