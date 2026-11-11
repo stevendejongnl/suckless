@@ -6,7 +6,7 @@
 #define SHARED_TAG_PLAYING_FILE ".local/state/dwm-shared-tag-playing"
 
 /* appearance */
-static const unsigned int borderpx  = 3;	/* border pixel of windows */
+static const unsigned int borderpx  = 2;	/* border pixel of windows */
 static const unsigned int snap	    = 1;       /* snap pixel */
 static const int swallowfloating    = 0;        /* 1 means swallow floating windows by default */
 static const int swterminheritfs    = 1;        /* 1 terminal inherits fullscreen on unswallow */
@@ -135,10 +135,10 @@ static const int refreshrate = 120;  /* refresh rate (per second) for client mov
 #define PERTAG_PATCH 0	/* vanitygaps uses global gaps (Pertag struct not available at compile time) */
 
 /* Gaps */
-static const unsigned int gappih = 10;	/* horiz inner gap between windows */
-static const unsigned int gappiv = 10;	/* vert inner gap between windows */
-static const unsigned int gappoh = 10;	/* horiz outer gap between windows and screen edge */
-static const unsigned int gappov = 10;	/* vert outer gap between windows and screen edge */
+static const unsigned int gappih = 4;	/* horiz inner gap between windows */
+static const unsigned int gappiv = 4;	/* vert inner gap between windows */
+static const unsigned int gappoh = 4;	/* horiz outer gap between windows and screen edge */
+static const unsigned int gappov = 4;	/* vert outer gap between windows and screen edge */
 static const int smartgaps = 0;		/* 1 means no outer gap when there is only one window */
 
 static const Layout layouts[] = {

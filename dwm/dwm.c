@@ -3319,6 +3319,11 @@ updatesystray(void)
 		if (!(systray = (Systray *)calloc(1, sizeof(Systray))))
 			die("fatal: could not malloc() %u bytes\n", sizeof(Systray));
 		systray->win = XCreateSimpleWindow(dpy, root, x, m->by, w, bh, 0, 0, scheme[SchemeSel][ColBg].pixel);
+		{
+			/* the same class as the bars, so a compositor can treat the tray like the bar (no rounded corners) */
+			XClassHint trayhint = { "dwm", "dwm" };
+			XSetClassHint(dpy, systray->win, &trayhint);
+		}
 		wa.event_mask	     = ButtonPressMask | ExposureMask;
 		wa.override_redirect = True;
 		wa.background_pixel  = scheme[SchemeNorm][ColBg].pixel;
