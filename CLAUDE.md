@@ -20,6 +20,7 @@ make all          # Build + install all tools
 make dwm          # Window manager
 make dmenu        # Menu system
 make slock        # Screen locker
+make overlay      # Hotkey overlay (cargo build of dwm-hotkey-overlay-rs, installs to /usr/local/bin)
 ```
 
 Each target removes existing `config.h`, regenerates from `config.def.h`, and runs `sudo make -C ./[tool] clean install`. Do **not** run `make` inside a tool subdirectory for install — the root Makefile is the canonical entry point.
@@ -228,7 +229,7 @@ Repository tracks both:
 ## Testing & Verification
 
 No formal test suite. Verification through:
-1. **Compilation**: `make clean && make` should produce zero errors/warnings
+1. **Compilation**: `make all` should produce zero errors/warnings
 2. **Runtime**: Start X session and test dwm behavior
 3. **Git history**: Track which patches are applied and when
 
@@ -260,6 +261,9 @@ Build artifacts (`.o` files, compiled binaries) are ignored via `.gitignore`.
 │   ├── slock.c             # Main source (~400 LOC)
 │   ├── explicit_bzero.c    # Secure memory clearing
 │   └── Makefile
+│
+├── dwm-dock/
+│   └── dwm-dock.py         # Dock helper script
 │
 ├── Makefile                # Root build orchestrator
 ├── README.md               # Applied and planned patches
