@@ -80,7 +80,8 @@
 enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm,
        SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess,
-       SchemeStatusBadgeOn, SchemeStatusBadgeOff, SchemeBadgeRed }; /* color schemes, SchemeBadgeRed has no status escape */
+       SchemeStatusBadgeOn, SchemeStatusBadgeOff, SchemeBadgeRed,
+       SchemeStatusBadgeMedium, SchemeStatusBadgeHigh }; /* color schemes, SchemeBadgeRed has no status escape; the last two map to status escapes 0x02-0x03 and must stay in this order */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -334,7 +335,6 @@ static const char localshare[] = ".local/share";
 static char stext[512];
 static int statusw;
 static int statussig;
-static pid_t statuspid = -1;
 static int screen;
 static int sw, sh;	     /* X display screen geometry width, height */
 static int bh;		     /* bar height */
@@ -610,21 +610,26 @@ buttonpress(XEvent *e)
 			arg.ui = 1 << i;
 		} else if (ev->x < x + TEXTW(selmon->ltsymbol))
 			click = ClkLtSymbol;
-		else if (ev->x > selmon->ww - statusw) {
-			char *text, *s, ch;
-			x = selmon->ww - statusw;
+		else if (ev->x > selmon->ww - statusw - (int)getsystraywidth()) {
+			char *text, *s;
+			/* the status text is drawn left of the systray */
+			x = selmon->ww - statusw - getsystraywidth();
 			click = ClkStatusText;
 			statussig = 0;
 			for (text = s = stext; *s && x <= ev->x; s++) {
 				if ((unsigned char)(*s) >= 0x10 && (unsigned char)(*s) <= 0x1f) {
-					ch = *s;
-					*s = '\0';
-					x += TEXTW(text) - lrpad;
-					*s = ch;
+					/* measure the segment without its color bytes, they are not drawn */
+					char seg[512], *t;
+					size_t n = 0;
+					for (t = text; t < s && n < sizeof(seg) - 1; t++)
+						if (!((unsigned char)*t >= 0x01 && (unsigned char)*t <= 0x0E))
+							seg[n++] = *t;
+					seg[n] = '\0';
+					x += TEXTW(seg) - lrpad;
 					text = s + 1;
 					if (x >= ev->x)
 						break;
-					statussig = ch;
+					statussig = *s;
 				}
 			}
 		} else
@@ -1038,6 +1043,9 @@ drawbar(Monitor *m)
 				/* Set color scheme based on escape code */
 				if (ctmp == 0x01) {
 					drw_setscheme(drw, scheme[SchemeStatusNorm]); /* reset to default */
+				} else if (ctmp >= 0x02 && ctmp <= 0x03) {
+					/* Map 0x02-0x03 to the yellow and orange badge */
+					drw_setscheme(drw, scheme[SchemeStatusBadgeMedium + (ctmp - 0x02)]);
 				} else if (ctmp >= 0x07 && ctmp <= 0x0E) {
 					/* Map 0x07-0x0E to SchemeStatusNorm through SchemeStatusBadgeOff */
 					drw_setscheme(drw, scheme[SchemeStatusNorm + (ctmp - 0x07)]);
@@ -1300,30 +1308,6 @@ getsystraywidth()
 	if(showsystray)
 		for(i = systray->icons; i; w += i->w + systrayspacing, i = i->next) ;
 	return w ? w + systrayspacing : 1;
-}
-
-pid_t
-getstatusbarpid()
-{
-	char buf[32], *str = buf, *c;
-	FILE *fp;
-
-	if (statuspid > 0) {
-		snprintf(buf, sizeof(buf), "/proc/%u/cmdline", statuspid);
-		if ((fp = fopen(buf, "r"))) {
-			fgets(buf, sizeof(buf), fp);
-			while ((c = strchr(str, '/')))
-				str = c + 1;
-			fclose(fp);
-			if (!strcmp(str, "statusbar.sh") || !strcmp(str, "dwmblocks"))
-				return statuspid;
-		}
-	}
-	if (!(fp = popen("pidof -s statusbar.sh || pidof -s dwmblocks 2>/dev/null", "r")))
-		return -1;
-	fgets(buf, sizeof(buf), fp);
-	pclose(fp);
-	return strtol(buf, NULL, 10);
 }
 
 int
@@ -2810,15 +2794,28 @@ togglescratch(const Arg *arg)
 void
 sigstatusbar(const Arg *arg)
 {
-	union sigval sv;
+	/* run ~/.dwm/statusbar/click.sh <statuscmd byte> <button> for the clicked status segment */
+	char script[256], sig[8], btn[8];
+	const char *home = getenv("HOME");
+	char *cmd[] = { script, sig, btn, NULL };
+	struct sigaction sa;
 
-	if (!statussig)
+	if (!statussig || !home)
 		return;
-	sv.sival_int = arg->i;
-	if ((statuspid = getstatusbarpid()) <= 0)
-		return;
-
-	sigqueue(statuspid, SIGRTMIN + statussig, sv);
+	snprintf(script, sizeof(script), "%s/.dwm/statusbar/click.sh", home);
+	snprintf(sig, sizeof(sig), "%d", statussig);
+	snprintf(btn, sizeof(btn), "%d", arg->i);
+	if (fork() == 0) {
+		if (dpy)
+			close(ConnectionNumber(dpy));
+		setsid();
+		sigemptyset(&sa.sa_mask);
+		sa.sa_flags = 0;
+		sa.sa_handler = SIG_DFL;
+		sigaction(SIGCHLD, &sa, NULL);
+		execvp(cmd[0], cmd);
+		_exit(1);
+	}
 }
 
 void

@@ -67,6 +67,20 @@ Moving a window to another monitor (`Mod+Shift+,` and `Mod+Shift+.`) goes throug
 - A fullscreen window is resized to the new monitor. `showhide` skips fullscreen clients, so without this the window stays drawn on the old monitor.
 - A YouTube or Spotify window keeps tag 9, and the target monitor switches to tag 9 (`viewonmonitor`) so the window stays visible. Other windows take the tags the target monitor shows.
 
+### Status bar clicks
+
+A byte `0x10`-`0x1F` in the status text marks a clickable segment (it is not drawn). A left click on the segment makes dwm run `~/.dwm/statusbar/click.sh <byte> <button>`, with the byte as a decimal number.
+
+| Byte | Segment         | Left click opens                      |
+|------|-----------------|---------------------------------------|
+| 17   | date (`0x11`)   | Google Calendar                       |
+| 18   | updates (`0x12`)| nothing yet                           |
+| 19   | Keito (`0x13`)  | the Keito app (`app.keito.ai`)        |
+
+The Keito badge is green at first, yellow after 2h and orange after 4h. Status escapes `0x02` and `0x03` draw the yellow and orange badge (`SchemeStatusBadgeMedium` and `SchemeStatusBadgeHigh`). Keep these two last in the scheme enum, after `SchemeBadgeRed`, because the escape is mapped by offset.
+
+`drw_text` puts all glyphs on the baseline of the first font, so the Nerd Font icons line up with the text.
+
 ### Window memory
 
 dwm remembers the last tag and monitor per window class + instance in `~/.local/state/dwm-windows` (`MEMORY_FILE`). A new window with no rule tag opens there, also after logout. Rules win, terminals are skipped, and popups are skipped too (window type dialog, utility or splash, or a window with a transient-for hint). Moving the pointer onto a window or onto another monitor makes that monitor and window active (`enternotify`, `motionnotify`), so `selmon` is the cursor's monitor. A popup opens on the monitor and tags of the cursor (`selmon`) and is never saved. If the saved monitor is gone the first monitor is used (monitors are matched by their x,y origin).

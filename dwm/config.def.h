@@ -59,8 +59,10 @@ static const char *colors[][3]	    = {
 	[SchemeStatusCritical] = { col_status_critical, col_gray1, col_gray2 },
 	[SchemeStatusSuccess]  = { col_status_success,	col_gray1, col_gray2 },
 	[SchemeStatusBadgeOn]  = { col_gray1,		col_status_success, col_gray2 },
-	[SchemeStatusBadgeOff] = { col_gray3,		col_gray2, col_gray2 },
+	[SchemeStatusBadgeOff] = { col_gray4,		col_gray2, col_gray2 },
 	[SchemeBadgeRed]       = { col_gray1,		col_status_critical, col_gray2 },
+	[SchemeStatusBadgeMedium] = { col_gray1,	col_status_medium,   col_gray2 },
+	[SchemeStatusBadgeHigh]	  = { col_gray1,	col_status_high,     col_gray2 },
 };
 
 /* tagging */
