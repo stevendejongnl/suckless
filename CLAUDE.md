@@ -85,6 +85,18 @@ The Keito badge is green at first, yellow after 2h and orange after 4h. Status e
 
 dwm remembers the last tag and monitor per window class + instance in `~/.local/state/dwm-windows` (`MEMORY_FILE`). A new window with no rule tag opens there, also after logout. Rules win, terminals are skipped, and popups are skipped too (window type dialog, utility or splash, or a window with a transient-for hint). Moving the pointer onto a window or onto another monitor makes that monitor and window active (`enternotify`, `motionnotify`), so `selmon` is the cursor's monitor. A popup opens on the monitor and tags of the cursor (`selmon`) and is never saved. If the saved monitor is gone the first monitor is used (monitors are matched by their x,y origin).
 
+## slock
+
+`slock` is started through `~/.dwm/lock.sh` (the `lock.desktop` launcher), not directly. The script pauses all media (`playerctl -a pause`), mutes the sound and unmutes it after unlock (only when it was on before), builds a blurred copy of the current wallpaper for every monitor in `~/.cache/slock/bg.ppm`, and runs `slock`. `lock.sh --prepare` only builds the image. The image is cached until the wallpaper or the monitors change.
+
+slock reads that image as a raw 8-bit PPM (P6), so the script writes it with `-depth 8`. A 16-bit PPM is silently ignored and the lock screen falls back to the plain colour.
+
+On top of the image slock draws, with Xft, a clock and date on every monitor (`timefmt`, `datefmt`), a state bar (grey idle, cyan while typing, red after a wrong password) and the number of failed attempts. All of it is in `config.def.h`.
+
+After `panicafter` seconds (120) without a key, slock shows an endless fake kernel panic. Any key ends it and shows the lock screen again. That key is not part of the password. Set `panicafter` to 0 to turn it off.
+
+To test without locking the real session, build a copy with a fixed test hash and no privilege drop, and run it on `Xvfb`.
+
 ## Configuration System
 
 All three tools use the **suckless config.h pattern**:
