@@ -1,14 +1,17 @@
 /* See LICENSE file for copyright and license details. */
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrender.h>
 
 #include "drw.h"
 #include "util.h"
 
 #define UTF_INVALID 0xFFFD
+#define CORNERSTEPS 12 /* line segments per rounded corner */
 
 static int
 utf8decode(const char *s_in, long *u, int *err)
@@ -244,27 +247,52 @@ drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int
 		XDrawRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w - 1, h - 1);
 }
 
-/* fill a rectangle with rounded corners in the current foreground of the gc */
-static void
-fillround(Drw *drw, int x, int y, unsigned int w, unsigned int h, int r)
+/* append the points of a quarter circle, starting at the angle start, and return how many were added */
+static int
+cornerpoints(XPointDouble *points, double centerx, double centery, double radius, double start)
 {
-	int d;
+	int step;
+	double angle;
+
+	for (step = 0; step <= CORNERSTEPS; step++) {
+		angle = start + M_PI / 2 * step / CORNERSTEPS;
+		points[step].x = centerx + radius * cos(angle);
+		points[step].y = centery + radius * sin(angle);
+	}
+	return CORNERSTEPS + 1;
+}
+
+/* fill a rectangle with anti-aliased rounded corners in the colour of the scheme entry */
+static void
+fillround(Drw *drw, int x, int y, unsigned int w, unsigned int h, int r, int colour)
+{
+	XPointDouble points[4 * (CORNERSTEPS + 1)];
+	XRenderColor color = drw->scheme[colour].color;
+	Picture target, source;
+	int count = 0;
 
 	if (r * 2 > (int)h)
 		r = h / 2;
 	if (r * 2 > (int)w)
 		r = w / 2;
 	if (r <= 0) {
+		XSetForeground(drw->dpy, drw->gc, drw->scheme[colour].pixel);
 		XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
 		return;
 	}
-	d = r * 2;
-	XFillRectangle(drw->dpy, drw->drawable, drw->gc, x + r, y, w - d, h);
-	XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y + r, w, h - d);
-	XFillArc(drw->dpy, drw->drawable, drw->gc, x, y, d, d, 90 * 64, 90 * 64);
-	XFillArc(drw->dpy, drw->drawable, drw->gc, x + w - d - 1, y, d, d, 0, 90 * 64);
-	XFillArc(drw->dpy, drw->drawable, drw->gc, x, y + h - d - 1, d, d, 180 * 64, 90 * 64);
-	XFillArc(drw->dpy, drw->drawable, drw->gc, x + w - d - 1, y + h - d - 1, d, d, 270 * 64, 90 * 64);
+	count += cornerpoints(points + count, x + r, y + r, r, M_PI);
+	count += cornerpoints(points + count, x + w - r, y + r, r, 1.5 * M_PI);
+	count += cornerpoints(points + count, x + w - r, y + h - r, r, 0);
+	count += cornerpoints(points + count, x + r, y + h - r, r, 0.5 * M_PI);
+
+	target = XRenderCreatePicture(drw->dpy, drw->drawable,
+	                              XRenderFindVisualFormat(drw->dpy, DefaultVisual(drw->dpy, drw->screen)), 0, NULL);
+	source = XRenderCreateSolidFill(drw->dpy, &color);
+	XRenderCompositeDoublePoly(drw->dpy, PictOpOver, source, target,
+	                           XRenderFindStandardFormat(drw->dpy, PictStandardA8),
+	                           0, 0, 0, 0, points, count, 0);
+	XRenderFreePicture(drw->dpy, source);
+	XRenderFreePicture(drw->dpy, target);
 }
 
 int
@@ -294,7 +322,7 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 	} else {
 		XSetForeground(drw->dpy, drw->gc, drw->scheme[invert ? ColFg : ColBg].pixel);
 		if (drw->chipinset)
-			fillround(drw, x, y + drw->chipinset, w, h - 2 * drw->chipinset, drw->chipradius);
+			fillround(drw, x, y + drw->chipinset, w, h - 2 * drw->chipinset, drw->chipradius, invert ? ColFg : ColBg);
 		else
 			XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
 		if (w < lpad)
