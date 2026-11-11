@@ -84,7 +84,7 @@ enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, Schem
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
-       NetWMWindowTypeDialog, NetClientList, DwmClientInfo, DwmFocusClient, NetLast }; /* EWMH atoms */
+       NetWMWindowTypeDialog, NetWMWindowTypeUtility, NetWMWindowTypeSplash, NetClientList, DwmClientInfo, DwmFocusClient, NetLast }; /* EWMH atoms */
 enum { Manager, Xembed, XembedInfo, XLast }; /* Xembed atoms */
 enum { WMProtocols, WMDelete, WMState, WMTakeFocus, WMLast }; /* default atoms */
 enum { ClkTagBar, ClkLtSymbol, ClkStatusText, ClkWinTitle,
@@ -116,7 +116,7 @@ struct Client {
 	int basew, baseh, incw, inch, maxw, maxh, minw, minh, hintsvalid;
 	int bw, oldbw;
 	unsigned int tags;
-	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow;
+	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, ispopup;
 	int ignorecfgreqpos, ignorecfgreqsize;
 	pid_t pid;
 	Client *next;
@@ -211,7 +211,9 @@ static void detachstack(Client *c);
 static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
+static void enternotify(XEvent *e);
 static void expose(XEvent *e);
+static void motionnotify(XEvent *e);
 static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
@@ -262,6 +264,7 @@ static void savememory(void);
 static void rememberclient(Client *c);
 static void rememberall(void);
 static int recallclient(Client *c, int keepmon);
+static int ispopup(Client *c);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
 static void setclientstate(Client *c, long state);
@@ -344,11 +347,13 @@ static void (*handler[LASTEvent]) (XEvent *) = {
 	[ConfigureRequest] = configurerequest,
 	[ConfigureNotify] = configurenotify,
 	[DestroyNotify] = destroynotify,
+	[EnterNotify] = enternotify,
 	[Expose] = expose,
 	[FocusIn] = focusin,
 	[KeyPress] = keypress,
 	[MappingNotify] = mappingnotify,
 	[MapRequest] = maprequest,
+	[MotionNotify] = motionnotify,
 	[PropertyNotify] = propertynotify,
 	[ResizeRequest] = resizerequest,
 	[UnmapNotify] = unmapnotify
@@ -464,7 +469,7 @@ applyrules(Client *c)
 		snprintf(c->rinstance, sizeof c->rinstance, "%s", ch.res_name);
 	}
 	/* no rule picked a tag: fall back to where this window was last seen */
-	if (!(c->tags & TAGMASK) && !c->isterminal)
+	if (!(c->tags & TAGMASK) && !c->isterminal && !ispopup(c))
 		recallclient(c, rulemon);
 	if (ch.res_class)
 		XFree(ch.res_class);
@@ -1134,6 +1139,43 @@ drawbars(void)
 
 	for (m = mons; m; m = m->next)
 		drawbar(m);
+}
+
+/* the monitor and tags under the pointer become the active ones */
+void
+enternotify(XEvent *e)
+{
+	Client *c;
+	Monitor *m;
+	XCrossingEvent *ev = &e->xcrossing;
+
+	if ((ev->mode != NotifyNormal || ev->detail == NotifyInferior) && ev->window != root)
+		return;
+	c = wintoclient(ev->window);
+	m = c ? c->mon : wintomon(ev->window);
+	if (m != selmon) {
+		unfocus(selmon->sel, 1);
+		selmon = m;
+	} else if (!c || c == selmon->sel)
+		return;
+	focus(c);
+}
+
+void
+motionnotify(XEvent *e)
+{
+	static Monitor *mon = NULL;
+	Monitor *m;
+	XMotionEvent *ev = &e->xmotion;
+
+	if (ev->window != root)
+		return;
+	if ((m = recttomon(ev->x_root, ev->y_root, 1, 1)) != mon && mon) {
+		unfocus(selmon->sel, 1);
+		selmon = m;
+		focus(NULL);
+	}
+	mon = m;
 }
 
 void
@@ -1896,7 +1938,7 @@ rememberclient(Client *c)
 	Memory *e;
 	int i;
 
-	if (c->isterminal || !c->rclass[0] || !c->mon)
+	if (c->isterminal || c->ispopup || !c->rclass[0] || !c->mon)
 		return;
 	for (i = 0; i < nmemory; i++)
 		if (!strcmp(memory[i].class, c->rclass) && !strcmp(memory[i].instance, c->rinstance))
@@ -1923,6 +1965,20 @@ rememberall(void)
 		for (c = m->clients; c; c = c->next)
 			rememberclient(c);
 	savememory();
+}
+
+/* popups open where the cursor is, not where their class was last seen */
+int
+ispopup(Client *c)
+{
+	Atom wtype = getatomprop(c, netatom[NetWMWindowType]);
+	Window trans;
+
+	c->ispopup = wtype == netatom[NetWMWindowTypeDialog]
+		|| wtype == netatom[NetWMWindowTypeUtility]
+		|| wtype == netatom[NetWMWindowTypeSplash]
+		|| XGetTransientForHint(dpy, c->win, &trans);
+	return c->ispopup;
 }
 
 int
@@ -2539,6 +2595,8 @@ setup(void)
 	netatom[NetWMFullscreen] = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
 	netatom[NetWMWindowType] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
 	netatom[NetWMWindowTypeDialog] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+	netatom[NetWMWindowTypeUtility] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_UTILITY", False);
+	netatom[NetWMWindowTypeSplash] = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_SPLASH", False);
 	netatom[NetClientList] = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
 	netatom[DwmClientInfo] = XInternAtom(dpy, "_DWM_CLIENT_INFO", False);
 	netatom[DwmFocusClient] = XInternAtom(dpy, "_DWM_FOCUS_CLIENT", False);

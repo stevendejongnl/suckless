@@ -69,7 +69,7 @@ Moving a window to another monitor (`Mod+Shift+,` and `Mod+Shift+.`) goes throug
 
 ### Window memory
 
-dwm remembers the last tag and monitor per window class + instance in `~/.local/state/dwm-windows` (`MEMORY_FILE`). A new window with no rule tag opens there, also after logout. Rules win, terminals are skipped, and if the saved monitor is gone the first monitor is used (monitors are matched by their x,y origin).
+dwm remembers the last tag and monitor per window class + instance in `~/.local/state/dwm-windows` (`MEMORY_FILE`). A new window with no rule tag opens there, also after logout. Rules win, terminals are skipped, and popups are skipped too (window type dialog, utility or splash, or a window with a transient-for hint). Moving the pointer onto a window or onto another monitor makes that monitor and window active (`enternotify`, `motionnotify`), so `selmon` is the cursor's monitor. A popup opens on the monitor and tags of the cursor (`selmon`) and is never saved. If the saved monitor is gone the first monitor is used (monitors are matched by their x,y origin).
 
 ## Configuration System
 
