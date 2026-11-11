@@ -15,7 +15,7 @@ slock:
 	sudo make -C ./slock clean install
 
 overlay:
-	cd ../../personal/dwm-hotkey-overlay-rs && \
+	cd ../../personal/apps/dwm-hotkey-overlay-rs && \
 	cargo build --release && \
 	sudo cp target/release/dwm-hotkey-overlay /usr/local/bin/
 
