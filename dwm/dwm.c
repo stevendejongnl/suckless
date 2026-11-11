@@ -81,7 +81,7 @@ enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm,
        SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess,
        SchemeStatusBadgeOn, SchemeStatusBadgeOff, SchemeBadgeRed,
-       SchemeStatusBadgeMedium, SchemeStatusBadgeHigh }; /* color schemes, SchemeBadgeRed has no status escape; the last two map to status escapes 0x02-0x03 and must stay in this order */
+       SchemeStatusBadgeMedium, SchemeStatusBadgeHigh, SchemeStatusBadgeSel }; /* color schemes. The last three map to the status escapes 0x02-0x04 by offset and must stay in this order. SchemeBadgeRed is escape 0x05 */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -119,6 +119,7 @@ struct Client {
 	unsigned int tags;
 	int isfixed, isfloating, isurgent, neverfocus, oldstate, isfullscreen, isterminal, noswallow, ispopup;
 	int ignorecfgreqpos, ignorecfgreqsize;
+	int fixedpos; /* class in fixedposclasses: keeps its monitor and position, never centred */
 	pid_t pid;
 	Client *next;
 	Client *snext;
@@ -468,6 +469,10 @@ applyrules(Client *c)
 		snprintf(c->rclass, sizeof c->rclass, "%s", ch.res_class);
 		snprintf(c->rinstance, sizeof c->rinstance, "%s", ch.res_name);
 	}
+	/* windows that place themselves once and must stay there */
+	for (i = 0; fixedposclasses[i]; i++)
+		if (ch.res_class && !strcmp(ch.res_class, fixedposclasses[i]))
+			c->ignorecfgreqpos = c->fixedpos = 1;
 	/* no rule picked a tag: fall back to where this window was last seen */
 	if (!(c->tags & TAGMASK) && !c->isterminal && !ispopup(c))
 		recallclient(c, rulemon);
@@ -875,10 +880,21 @@ configurerequest(XEvent *e)
 					c->h = ev->height;
 				}
 			}
-			if ((c->x + c->w) > m->mx + m->mw && c->isfloating)
-				c->x = m->mx + (m->mw / 2 - WIDTH(c) / 2); /* center in x direction */
-			if ((c->y + c->h) > m->my + m->mh && c->isfloating)
-				c->y = m->my + (m->mh / 2 - HEIGHT(c) / 2); /* center in y direction */
+			if (c->fixedpos) {
+				/* a window that placed itself (the status bar popup) may grow: shift it back into
+				 * the monitor instead of centring it, it opened under the click on purpose */
+				if (c->x + WIDTH(c) > m->mx + m->mw)
+					c->x = m->mx + m->mw - WIDTH(c);
+				if (c->x < m->mx)
+					c->x = m->mx;
+				if (c->y + HEIGHT(c) > m->my + m->mh)
+					c->y = m->my + m->mh - HEIGHT(c);
+			} else {
+				if ((c->x + c->w) > m->mx + m->mw && c->isfloating)
+					c->x = m->mx + (m->mw / 2 - WIDTH(c) / 2); /* center in x direction */
+				if ((c->y + c->h) > m->my + m->mh && c->isfloating)
+					c->y = m->my + (m->mh / 2 - HEIGHT(c) / 2); /* center in y direction */
+			}
 			if ((ev->value_mask & (CWX|CWY)) && !(ev->value_mask & (CWWidth|CWHeight)))
 				configure(c);
 			if (ISVISIBLE(c))
@@ -1020,8 +1036,12 @@ drawbar(Monitor *m)
 		int first_drawn = 1;
 		unsigned int seg_lpad;
 
+		int chip = 0; /* the current scheme is a chip: a rounded box inset from the bar edges, as wide as its text */
+
 		drw_setscheme(drw, scheme[SchemeStatusNorm]); /* default color */
 		tw = calculate_status_width(stext) - lrpad / 2 + 2;
+		/* the chips do not fill the bar height, so paint the status area first */
+		drw_rect(drw, m->ww - tw - stw, 0, tw, bh, 1, 1);
 
 		/* Parse and render status text with embedded color codes */
 		while (1) {
@@ -1033,7 +1053,11 @@ drawbar(Monitor *m)
 				/* Draw text segment up to this point */
 				if (tp < ts) {
 					seg_lpad = first_drawn ? (lrpad / 2 - 2) : 0;
-					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, seg_lpad, tp, 0);
+					drw->chipinset = chip ? chipinset : 0;
+					drw->chipradius = chipradius;
+					drw_text(drw, m->ww - tw + tx - stw, 0,
+						chip ? drw_fontset_getwidth(drw, tp) + seg_lpad : tw - tx, bh, seg_lpad, tp, 0);
+					drw->chipinset = 0;
 					tx += TEXTW(tp) - lrpad + seg_lpad;
 					first_drawn = 0;
 				}
@@ -1041,14 +1065,20 @@ drawbar(Monitor *m)
 				*ts = ctmp; /* restore character */
 
 				/* Set color scheme based on escape code */
+				chip = 0;
 				if (ctmp == 0x01) {
 					drw_setscheme(drw, scheme[SchemeStatusNorm]); /* reset to default */
-				} else if (ctmp >= 0x02 && ctmp <= 0x03) {
-					/* Map 0x02-0x03 to the yellow and orange badge */
+				} else if (ctmp >= 0x02 && ctmp <= 0x04) {
+					/* Map 0x02-0x04 to the yellow, orange and selected (cyan) chip */
 					drw_setscheme(drw, scheme[SchemeStatusBadgeMedium + (ctmp - 0x02)]);
+					chip = 1;
+				} else if (ctmp == 0x05) {
+					drw_setscheme(drw, scheme[SchemeBadgeRed]);
+					chip = 1;
 				} else if (ctmp >= 0x07 && ctmp <= 0x0E) {
 					/* Map 0x07-0x0E to SchemeStatusNorm through SchemeStatusBadgeOff */
 					drw_setscheme(drw, scheme[SchemeStatusNorm + (ctmp - 0x07)]);
+					chip = ctmp >= 0x0D; /* the green and grey chip */
 				}
 
 				tp = ++ts; /* move text pointer past escape code */
@@ -1077,7 +1107,11 @@ drawbar(Monitor *m)
 				/* Draw final segment */
 				if (tp < ts) {
 					seg_lpad = first_drawn ? (lrpad / 2 - 2) : 0;
-					drw_text(drw, m->ww - tw + tx - stw, 0, tw - tx, bh, seg_lpad, tp, 0);
+					drw->chipinset = chip ? chipinset : 0;
+					drw->chipradius = chipradius;
+					drw_text(drw, m->ww - tw + tx - stw, 0,
+						chip ? drw_fontset_getwidth(drw, tp) + seg_lpad : tw - tx, bh, seg_lpad, tp, 0);
+					drw->chipinset = 0;
 				}
 				break;
 			}
@@ -1614,6 +1648,10 @@ manage(Window w, XWindowAttributes *wa)
 		term = termforwin(c);
 	}
 	closesharedtagapps(c);
+	/* a window that places itself (fixedposclasses) lands on the monitor of that position, not on the
+	 * selected monitor: the clamping below would pull it to the wrong one */
+	if (c->fixedpos)
+		c->mon = recttomon(c->x, c->y, c->w, c->h);
 
 	if (c->x + WIDTH(c) > c->mon->wx + c->mon->ww)
 		c->x = c->mon->wx + c->mon->ww - WIDTH(c);
@@ -1957,11 +1995,15 @@ ispopup(Client *c)
 {
 	Atom wtype = getatomprop(c, netatom[NetWMWindowType]);
 	Window trans;
+	unsigned int i;
 
 	c->ispopup = wtype == netatom[NetWMWindowTypeDialog]
 		|| wtype == netatom[NetWMWindowTypeUtility]
 		|| wtype == netatom[NetWMWindowTypeSplash]
 		|| XGetTransientForHint(dpy, c->win, &trans);
+	/* apps that show their popups as normal windows */
+	for (i = 0; !c->ispopup && popupclasses[i]; i++)
+		c->ispopup = !strcmp(c->rclass, popupclasses[i]);
 	return c->ispopup;
 }
 

@@ -71,13 +71,39 @@ Moving a window to another monitor (`Mod+Shift+,` and `Mod+Shift+.`) goes throug
 
 A byte `0x10`-`0x1F` in the status text marks a clickable segment (it is not drawn). A left click on the segment makes dwm run `~/.dwm/statusbar/click.sh <byte> <button>`, with the byte as a decimal number.
 
-| Byte | Segment         | Left click opens                      |
-|------|-----------------|---------------------------------------|
-| 17   | date (`0x11`)   | Google Calendar                       |
-| 18   | updates (`0x12`)| nothing yet                           |
-| 19   | Keito (`0x13`)  | the Keito app (`app.keito.ai`)        |
+| Byte | Segment          | Left click opens                          |
+|------|------------------|-------------------------------------------|
+| 17   | date (`0x11`)    | popup, Calendar tab                       |
+| 18   | updates (`0x12`) | nothing yet                               |
+| 19   | Keito (`0x13`)   | popup, Keito tab                          |
+| 20   | Claude (`0x14`)  | popup, Claude tab                         |
+| 21   | bell (`0x15`)    | popup, Notifications tab                  |
 
-The Keito badge is green at first, yellow after 2h and orange after 4h. Status escapes `0x02` and `0x03` draw the yellow and orange badge (`SchemeStatusBadgeMedium` and `SchemeStatusBadgeHigh`). Keep these two last in the scheme enum, after `SchemeBadgeRed`, because the escape is mapped by offset.
+The date, Keito and Claude segments are chips (a background colour) that sit next to each other like tabs. They open one popup, `~/.dwm/statusbar/dwm-popup.py`, with a tab for each. A click on another chip while the popup is open switches the tab, and a click on the same chip closes it. The popup also closes on Escape, or when it lost the focus and the pointer is away from it and from the bar. The popup is a GTK3 window with the class `claude-git-guard`, so dwm floats it. The window has a fixed size (the scroll areas of the tabs do not pass the content width up, long text ends in "..."), so it never resizes after it opened. It opens centred under the click: `click.sh` reads the pointer position at the moment of the click and passes it as `--at X Y`, because starting the popup takes a moment. dwm reads the start position of a new window as absolute but adds the monitor origin to a later move, so the position is set before the window is shown. For the same reason the class is in `fixedposclasses` (`config.def.h`): dwm puts such a window on the monitor that holds the position it asks for (not on the selected monitor, which would clamp it to the wrong one and open it at the top middle of that monitor) ignores later position requests of it and, when its size changes, shifts it back into the monitor instead of centring it, otherwise a configure request from GTK (for example when a notification arrives) would put the popup in the middle of the second monitor.
+
+- **Keito tab**: hours logged today against 8 hours, a timeline of the day, the running timer (Stop) and today's entries (the play button restarts one).
+- **Claude tab**: a card per account (work `CS`, personal `PH`) with rings for the 5 hour and weekly window, reset times, pace and extra-usage credits. The data is the cache of `claude-usage-collect`, the same file the Claude Code status line reads. The Claude chips show the worse of the two windows, grey below 60%, yellow from 60%, orange from 80%, and grey when the data is stale.
+- **Calendar tab**: today's meetings from Google Calendar on a timeline and as a list, with a Join button for the Google Meet link. It runs `popup/calendar_fetch.py` through `uv` and reuses the OAuth token of the gcal skill. The result is cached for two minutes in `$XDG_RUNTIME_DIR/dwm-calendar.json`.
+- **Notifications tab**: the dunst history as cards grouped by day (app tile, title, body, age), with dismiss, Clear all and a do-not-disturb switch. `Mod+n` opens this tab (`notifcmd` in `config.def.h`), and pressing it again closes it. Without a click position (a key press) the popup does not follow the pointer: it opens right-aligned under the bar, where the chips are, on the monitor of the focused window. The bell chip after the Keito chip counts the notifications that were not seen yet: the tab writes the highest id it showed to `$XDG_RUNTIME_DIR/dwm-notifications-seen`. The chip is yellow while something is new and grey otherwise, and the bell is crossed while dunst is paused.
+- A tab only appears when its data exists on the machine (Keito `.env`, Claude cache, gcal credentials).
+- To check the layout without opening the popup: `dwm-popup.py png <dir> [tab ...]` writes a PNG per tab. Run it on `Xvfb` to keep it off the screen.
+
+Every item after the update count is a **chip**: a rounded box inset from the top and bottom of the bar (`chipinset` and `chipradius` in `config.def.h`), as wide as its text, with a plain gap between chips. A chip is `<click byte><badge escape> <icon> text <0x01> `. The badge escape sets the colour and also makes dwm draw the chip (`drw->chipinset` in `drw_text`).
+
+| Escape | Chip colour                                  |
+|--------|----------------------------------------------|
+| `0x02` | yellow (`SchemeStatusBadgeMedium`)           |
+| `0x03` | orange (`SchemeStatusBadgeHigh`)             |
+| `0x04` | cyan, the chip of the open popup tab (`SchemeStatusBadgeSel`) |
+| `0x05` | red (`SchemeBadgeRed`)                       |
+| `0x0D` | green (`SchemeStatusBadgeOn`)                |
+| `0x0E` | grey (`SchemeStatusBadgeOff`)                |
+
+Keep `SchemeStatusBadgeMedium`, `SchemeStatusBadgeHigh` and `SchemeStatusBadgeSel` last in the scheme enum, in this order, because `0x02`-`0x04` are mapped by offset. `statusbar.sh` turns the badge of the chip whose popup tab is open to `0x04`: the popup writes its tab name to `$XDG_RUNTIME_DIR/dwm-popup-tab`.
+
+The Keito chip is green at first, yellow after 2h and orange after 4h. The Claude chip is grey below 60%, yellow from 60%, orange from 80% and red from 95%. The update count is a chip when 5 or more updates wait: yellow, orange from 20, red from 50.
+
+To check the bar without touching the session, build a copy of `dwm/` in a scratch directory, run it on `Xephyr` with a fake `HOME` (so autostart and the window memory file stay untouched), set the text with `xsetroot -name "$(~/.dwm/statusbar/statusbar.sh)"` and crop the top 30px with `import`.
 
 `drw_text` puts all glyphs on the baseline of the first font, so the Nerd Font icons line up with the text.
 

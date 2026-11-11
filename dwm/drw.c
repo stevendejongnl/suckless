@@ -244,6 +244,29 @@ drw_rect(Drw *drw, int x, int y, unsigned int w, unsigned int h, int filled, int
 		XDrawRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w - 1, h - 1);
 }
 
+/* fill a rectangle with rounded corners in the current foreground of the gc */
+static void
+fillround(Drw *drw, int x, int y, unsigned int w, unsigned int h, int r)
+{
+	int d;
+
+	if (r * 2 > (int)h)
+		r = h / 2;
+	if (r * 2 > (int)w)
+		r = w / 2;
+	if (r <= 0) {
+		XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
+		return;
+	}
+	d = r * 2;
+	XFillRectangle(drw->dpy, drw->drawable, drw->gc, x + r, y, w - d, h);
+	XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y + r, w, h - d);
+	XFillArc(drw->dpy, drw->drawable, drw->gc, x, y, d, d, 90 * 64, 90 * 64);
+	XFillArc(drw->dpy, drw->drawable, drw->gc, x + w - d - 1, y, d, d, 0, 90 * 64);
+	XFillArc(drw->dpy, drw->drawable, drw->gc, x, y + h - d - 1, d, d, 180 * 64, 90 * 64);
+	XFillArc(drw->dpy, drw->drawable, drw->gc, x + w - d - 1, y + h - d - 1, d, d, 270 * 64, 90 * 64);
+}
+
 int
 drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lpad, const char *text, int invert)
 {
@@ -270,7 +293,10 @@ drw_text(Drw *drw, int x, int y, unsigned int w, unsigned int h, unsigned int lp
 		w = invert ? invert : ~invert;
 	} else {
 		XSetForeground(drw->dpy, drw->gc, drw->scheme[invert ? ColFg : ColBg].pixel);
-		XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
+		if (drw->chipinset)
+			fillround(drw, x, y + drw->chipinset, w, h - 2 * drw->chipinset, drw->chipradius);
+		else
+			XFillRectangle(drw->dpy, drw->drawable, drw->gc, x, y, w, h);
 		if (w < lpad)
 			return x + w;
 		d = XftDrawCreate(drw->dpy, drw->drawable,

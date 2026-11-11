@@ -21,6 +21,9 @@ static const char *systrayignore[] = {
 	"indicator-solaar",
 	NULL
 };
+/* status bar chips (colour escapes 0x02-0x05, 0x0D, 0x0E): a rounded box inset from the top and bottom of the bar */
+static const int chipinset	    = 2;	/* pixels above and below the chip */
+static const int chipradius	    = 4;	/* corner radius, 0 means square */
 static const int showbar	    = 1;	/* 0 means no bar */
 static const int topbar		    = 1;	/* 0 means bottom bar */
 static const int focusonwheel	    = 0;
@@ -63,6 +66,7 @@ static const char *colors[][3]	    = {
 	[SchemeBadgeRed]       = { col_gray1,		col_status_critical, col_gray2 },
 	[SchemeStatusBadgeMedium] = { col_gray1,	col_status_medium,   col_gray2 },
 	[SchemeStatusBadgeHigh]	  = { col_gray1,	col_status_high,     col_gray2 },
+	[SchemeStatusBadgeSel]	  = { col_gray1,	col_cyan,	     col_gray2 }, /* the chip of the open popup tab */
 };
 
 /* tagging */
@@ -72,6 +76,22 @@ static const char scratchpadname[] = "scratchpad";
 #define TAG_MASK(n) (1 << ((n) - 1))
 #define SHARED_TAG TAG_MASK(9) /* YouTube and Spotify share this tag */
 #define TAG_ALL (~0)
+/* WM_CLASS class of apps whose popups are plain normal windows. Like dialogs they open on
+ * the monitor and tags of the cursor, not where the class was last seen, and are never saved.
+ * Keep NULL as the last entry. */
+static const char *popupclasses[] = {
+	"com.onepassword.OnePassword", /* Quick Access and the authorization prompts */
+	NULL
+};
+
+/* WM_CLASS class of windows that keep the position they opened at. dwm adds the monitor origin to the
+ * position a client asks for later, so on a second monitor such a window would end up in the middle of it.
+ * The status bar popup (dwm-popup.py) is one: it opens under the click. Keep NULL as the last entry. */
+static const char *fixedposclasses[] = {
+	"claude-git-guard",
+	NULL
+};
+
 static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
@@ -179,7 +199,7 @@ static const char *helpoverlaycmd[] = {
     NULL
 };
 
-static const char *notifcmd[] = { "/home/stevendejong/.local/bin/notification-center.sh", NULL };
+static const char *notifcmd[] = { "/home/stevendejong/.dwm/statusbar/dwm-popup.py", "notifications", NULL };
 #include "shift-tools.c"
 
 static const Key keys[] = {

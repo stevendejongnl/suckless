@@ -24,6 +24,7 @@ typedef struct {
 	GC gc;
 	Clr *scheme;
 	Fnt *fonts;
+	int chipinset, chipradius; /* drw_text fills a rounded box inset from top and bottom when chipinset is set */
 } Drw;
 
 /* Drawable abstraction */
