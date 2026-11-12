@@ -20,6 +20,7 @@
  *
  * To understand everything else, start reading main().
  */
+#include <ctype.h>
 #include <errno.h>
 #include <locale.h>
 #include <signal.h>
@@ -81,7 +82,7 @@ enum { CurNormal, CurResize, CurMove, CurLast }; /* cursor */
 enum { SchemeNorm, SchemeSel, SchemeStatus, SchemeTagsSel, SchemeTagsNorm, SchemeInfoSel, SchemeInfoNorm,
        SchemeStatusNorm, SchemeStatusLow, SchemeStatusMedium, SchemeStatusHigh, SchemeStatusCritical, SchemeStatusSuccess,
        SchemeStatusBadgeOn, SchemeStatusBadgeOff, SchemeBadgeRed,
-       SchemeStatusBadgeMedium, SchemeStatusBadgeHigh, SchemeStatusBadgeSel }; /* color schemes. The last three map to the status escapes 0x02-0x04 by offset and must stay in this order. SchemeBadgeRed is escape 0x05 */
+       SchemeStatusBadgeMedium, SchemeStatusBadgeHigh, SchemeStatusBadgeSel, SchemeCaseDot }; /* color schemes. The last three map to the status escapes 0x02-0x04 by offset and must stay in this order. SchemeBadgeRed is escape 0x05 */
 enum { NetSupported, NetWMName, NetWMState, NetWMCheck,
        NetSystemTray, NetSystemTrayOP, NetSystemTrayOrientation, NetSystemTrayOrientationHorz,
        NetWMFullscreen, NetActiveWindow, NetWMWindowType,
@@ -302,6 +303,7 @@ static int updategeom(void);
 static void updatenumlockmask(void);
 static void updatesizehints(Client *c);
 static void updatestatus(void);
+static void updatecasecolor(void);
 static void updatesystray(void);
 static void updatesystrayicongeom(Client *i, int w, int h);
 static void updatesystrayiconstate(Client *i, XPropertyEvent *ev);
@@ -1075,6 +1077,9 @@ drawbar(Monitor *m)
 				} else if (ctmp == 0x05) {
 					drw_setscheme(drw, scheme[SchemeBadgeRed]);
 					chip = 1;
+				} else if (ctmp == 0x06) {
+					/* the dot in the colour of the PC case */
+					drw_setscheme(drw, scheme[SchemeCaseDot]);
 				} else if (ctmp >= 0x07 && ctmp <= 0x0E) {
 					/* Map 0x07-0x0E to SchemeStatusNorm through SchemeStatusBadgeOff */
 					drw_setscheme(drw, scheme[SchemeStatusNorm + (ctmp - 0x07)]);
@@ -3194,9 +3199,43 @@ updatesizehints(Client *c)
 	c->hintsvalid = 1;
 }
 
+/* The colour of the PC case: the first line of ~/.config/case-color, "#RRGGBB". The dot of status escape 0x06 uses it.
+ * Read again on every status update, so the popup picker takes effect within a second. */
+void
+updatecasecolor(void)
+{
+	static char current[16] = "";
+	char path[256], line[16] = "";
+	const char *home = getenv("HOME");
+	FILE *file;
+	int i;
+
+	if (!home)
+		return;
+	snprintf(path, sizeof(path), "%s/.config/case-color", home);
+	if (!(file = fopen(path, "r")))
+		return;
+	if (!fgets(line, sizeof(line), file)) {
+		fclose(file);
+		return;
+	}
+	fclose(file);
+	line[strcspn(line, "\r\n")] = '\0';
+	if (strlen(line) != 7 || line[0] != '#')
+		return;
+	for (i = 1; i < 7; i++)
+		if (!isxdigit((unsigned char)line[i]))
+			return;
+	if (!strcmp(line, current))
+		return;
+	drw_clr_create(drw, &scheme[SchemeCaseDot][ColFg], line);
+	strcpy(current, line);
+}
+
 void
 updatestatus(void)
 {
+	updatecasecolor();
 	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext))) {
 		strcpy(stext, "dwm-"VERSION);
 		statusw = TEXTW(stext) - lrpad + 2;

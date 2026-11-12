@@ -67,6 +67,7 @@ static const char *colors[][3]	    = {
 	[SchemeStatusBadgeMedium] = { col_gray1,	col_status_medium,   col_gray2 },
 	[SchemeStatusBadgeHigh]	  = { col_gray1,	col_status_high,     col_gray2 },
 	[SchemeStatusBadgeSel]	  = { col_gray1,	col_cyan,	     col_gray2 }, /* the chip of the open popup tab */
+	[SchemeCaseDot]		  = { "#7A7F99",	col_gray1,	     col_gray2 }, /* the PC case dot (escape 0x06), the foreground comes from ~/.config/case-color */
 };
 
 /* tagging */
