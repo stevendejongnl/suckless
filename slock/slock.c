@@ -165,7 +165,7 @@ static struct image bgimg;
 #define PANICROWS 160
 #define PANICCOLS 200
 #define PANICTICK 45 /* ms between scroll steps */
-#define NSCEN 7
+#define NSCEN 10
 
 struct panicrow {
 	char ts[40], tag[12], msg[PANICCOLS];
@@ -500,6 +500,67 @@ sc_systemd(void)
 }
 
 static void
+sc_grub(void)
+{
+	switch (panicstage) {
+	case 0: padd(0, NULL, 0, PC_ERR, "%s", "error: unknown filesystem."); break;
+	case 1: padd(0, NULL, 0, PC_WARN, "%s", "Entering rescue mode..."); break;
+	case 2: padd(0, NULL, 0, PC_NORM, "%s", "grub rescue> ls"); break;
+	case 3: padd(0, NULL, 0, PC_NORM, "%s", "(hd0) (hd0,gpt3) (hd0,gpt2) (hd0,gpt1)"); break;
+	case 4: padd(0, NULL, 0, PC_NORM, "%s", "grub rescue> ls (hd0,gpt2)/"); break;
+	case 5: padd(0, NULL, 0, PC_ERR, "%s", "error: unknown filesystem."); break;
+	case 6: padd(0, NULL, 0, PC_NORM, "%s", "grub rescue> set prefix=(hd0,gpt2)/boot/grub"); break;
+	case 7: padd(0, NULL, 0, PC_NORM, "%s", "grub rescue> insmod normal"); break;
+	case 8: padd(0, NULL, 0, PC_ERR, "%s", "error: file '/boot/grub/x86_64-efi/normal.mod' not found."); break;
+	default: padd(0, NULL, 0, PC_NORM, "%s", "grub rescue> _"); panicdone = 1; break;
+	}
+}
+
+static void
+sc_initramfs(void)
+{
+	unsigned long a = rnd64() & 0xffffffffUL, b = rnd(65536), c = rnd(65536);
+
+	switch (panicstage) {
+	case 0: padd(0, NULL, 0, PC_NORM, "%s", "Loading, please wait..."); break;
+	case 1: padd(0, NULL, 0, PC_NORM, "Starting version %s", "256.7-1-arch"); break;
+	case 2: padd(0, NULL, 0, PC_WARN, "Waiting 10 seconds for device /dev/disk/by-uuid/%08lx-%04lx-%04lx ...", a, b, c); break;
+	case 3: padd(0, NULL, 0, PC_ERR, "ERROR: device 'UUID=%08lx-%04lx-%04lx' not found. Skipping fsck.", a, b, c); break;
+	case 4: padd(0, NULL, 0, PC_NORM, ":: mounting 'UUID=%08lx-%04lx-%04lx' on real root", a, b, c); break;
+	case 5: padd(0, NULL, 0, PC_ERR, "mount: /new_root: can't find UUID=%08lx-%04lx-%04lx.", a, b, c); break;
+	case 6: padd(0, NULL, 0, PC_ERR, "%s", "You are now being dropped into an emergency shell."); break;
+	case 7: padd(0, NULL, 0, PC_DIM, "%s", "sh: can't access tty: job control turned off"); break;
+	default: padd(0, NULL, 0, PC_NORM, "%s", "[rootfs ]# _"); panicdone = 1; break;
+	}
+}
+
+static void
+sc_fsck(void)
+{
+	switch (panicstage) {
+	case 0: padd(0, NULL, 0, PC_NORM, "%s", "fsck from util-linux 2.40.2"); break;
+	case 1: padd(0, NULL, 0, PC_WARN, "%s", "/dev/nvme0n1p2 contains a file system with errors, check forced."); break;
+	case 2: padd(0, NULL, 0, PC_NORM, "%s", "Pass 1: Checking inodes, blocks, and sizes"); panictrace = 5 + rnd(8); break;
+	case 3:
+		padd(0, NULL, 0, PC_WARN, "Inode %lu has illegal block(s).  Clear? yes", 100000 + rnd(900000));
+		if (--panictrace > 0)
+			panicstay = 1;
+		break;
+	case 4: padd(0, NULL, 0, PC_NORM, "%s", "Pass 2: Checking directory structure"); panictrace = 4 + rnd(6); break;
+	case 5:
+		padd(0, NULL, 0, PC_WARN, "Entry '%s' in /home/user (%lu) has deleted/unused inode %lu.  Clear? yes", PICK(panicnames), 1000000 + rnd(900000), 100000 + rnd(900000));
+		if (--panictrace > 0)
+			panicstay = 1;
+		break;
+	case 6: padd(0, NULL, 0, PC_NORM, "%s", "Pass 3: Checking directory connectivity"); break;
+	case 7: padd(0, NULL, 0, PC_ERR, "%s", "/dev/nvme0n1p2: UNEXPECTED INCONSISTENCY; RUN fsck MANUALLY."); break;
+	case 8: padd(0, NULL, 0, PC_ERR, "%s", "        (i.e., without -a or -p options)"); break;
+	case 9: padd(0, NULL, 0, PC_ERR, "%s", "fsck exited with status code 4"); break;
+	default: padd(0, NULL, 0, PC_DIM, "%s", "The root filesystem on /dev/nvme0n1p2 requires a manual fsck"); panicdone = 1; break;
+	}
+}
+
+static void
 sc_mce(void)
 {
 	switch (panicstage) {
@@ -535,7 +596,10 @@ panicline(void)
 	case 3: sc_oom(); break;
 	case 4: sc_disk(); break;
 	case 5: sc_systemd(); break;
-	default: sc_mce(); break;
+	case 6: sc_mce(); break;
+	case 7: sc_grub(); break;
+	case 8: sc_initramfs(); break;
+	default: sc_fsck(); break;
 	}
 	if (panicdone) {
 		panicdone = 0;
@@ -602,7 +666,7 @@ panicinit(void)
 	panicnext = panicstay = panicdone = panicpause = 0;
 	panicoops = 1;
 	panicclock = 2871000000L + (long)rnd(1000000) * 1000;
-	panicbsod = rnd(8) == 0; /* one start in eight is a Windows bluescreen */
+	panicbsod = rnd(3) == 0; /* one start in three is a Windows bluescreen */
 	if (panicbsod) {
 		bsodpct = 0;
 		bsodstop = (int)rnd(LEN(bsodstops));
