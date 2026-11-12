@@ -1104,6 +1104,11 @@ lockscreen(Display *dpy, struct xrandr *rr, int screen)
 	                          CopyFromParent,
 	                          DefaultVisual(dpy, lock->screen),
 	                          CWOverrideRedirect | CWBackPixel, &wa);
+	/* a class lets picom rules exempt the lock window from opacity, rounded corners and shadows */
+	{
+		XClassHint hint = { "slock", "Slock" };
+		XSetClassHint(dpy, lock->win, &hint);
+	}
 	lock->w = DisplayWidth(dpy, lock->screen);
 	lock->h = DisplayHeight(dpy, lock->screen);
 	lock->vis = DefaultVisual(dpy, lock->screen);
