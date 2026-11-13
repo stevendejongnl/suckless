@@ -267,6 +267,8 @@ static void savememory(void);
 static void rememberclient(Client *c);
 static void rememberall(void);
 static int recallclient(Client *c, int keepmon);
+static void gotoclient(Client *c);
+static int scanning = 0; /* set while scan() adopts existing windows at startup */
 static int ispopup(Client *c);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
@@ -784,18 +786,7 @@ clientmessage(XEvent *e)
 			seturgent(c, 1);
 	} else if (cme->message_type == netatom[DwmFocusClient]) {
 		/* dock request: go to the client's monitor and tag, then focus it */
-		unsigned int t = c->tags & TAGMASK;
-		if (!t)
-			return;
-		if (c->mon != selmon) {
-			unfocus(selmon->sel, 0);
-			selmon = c->mon;
-		}
-		if (!ISVISIBLE(c))
-			view(&(Arg){.ui = t & -t});
-		focus(c);
-		restack(selmon);
-		XWarpPointer(dpy, None, c->win, 0, 0, 0, 0, c->w / 2, c->h / 2);
+		gotoclient(c);
 	}
 }
 
@@ -1625,13 +1616,33 @@ updatesharedtagplaying(void)
 	drawbars();
 }
 
+/* go to the client's monitor and tag, focus it and centre the pointer on it */
+void
+gotoclient(Client *c)
+{
+	unsigned int t = c->tags & TAGMASK;
+
+	if (!t)
+		return;
+	if (c->mon != selmon) {
+		unfocus(selmon->sel, 0);
+		selmon = c->mon;
+	}
+	if (!ISVISIBLE(c))
+		view(&(Arg){.ui = t & -t});
+	focus(c);
+	restack(selmon);
+	XWarpPointer(dpy, None, root, 0, 0, 0, 0,
+		c->x + c->bw + c->w / 2, c->y + c->bw + c->h / 2);
+}
+
 void
 manage(Window w, XWindowAttributes *wa)
 {
 	Client *c, *t = NULL, *term = NULL;
 	Window trans = None;
 	XWindowChanges wc;
-	int focusclient = 1;
+	int focusclient = 1, placed = 0;
 
 	c = ecalloc(1, sizeof(Client));
 	c->win = w;
@@ -1704,6 +1715,7 @@ manage(Window w, XWindowAttributes *wa)
 		/* Do not let swallowed client steal focus unless the terminal has focus */
 		focusclient = (term == selmon->sel);
 	} else {
+		placed = 1;
 		attach(c);
 
 		if (focusclient || !c->mon->sel || !c->mon->stack)
@@ -1727,6 +1739,10 @@ manage(Window w, XWindowAttributes *wa)
 	XMapWindow(dpy, c->win);
 	if (focusclient)
 		focus(NULL);
+	/* a new window pulls the view to its own monitor and tag. Popups open at the cursor, swallowed
+	 * windows take over their terminal, and existing windows are not moved when dwm starts. */
+	if (focusclient && placed && !scanning && !c->ispopup)
+		gotoclient(c);
 }
 
 void
@@ -2419,6 +2435,7 @@ scan(void)
 	Window d1, d2, *wins = NULL;
 	XWindowAttributes wa;
 
+	scanning = 1;
 	if (XQueryTree(dpy, root, &d1, &d2, &wins, &num)) {
 		for (i = 0; i < num; i++) {
 			if (!XGetWindowAttributes(dpy, wins[i], &wa)
@@ -2437,6 +2454,7 @@ scan(void)
 		if (wins)
 			XFree(wins);
 	}
+	scanning = 0;
 }
 
 void
