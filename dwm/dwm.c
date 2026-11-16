@@ -2782,6 +2782,8 @@ unswallow(Client *c)
 void
 tag(const Arg *arg)
 {
+	if (selmon->sel && sharedtagappindex(selmon->sel))
+		return;
 	if (selmon->sel && arg->ui & TAGMASK) {
 		selmon->sel->tags = arg->ui & TAGMASK;
 		rememberclient(selmon->sel);
@@ -2794,7 +2796,7 @@ tag(const Arg *arg)
 void
 tagandview(const Arg *arg)
 {
-	if (!selmon->sel)
+	if (!selmon->sel || sharedtagappindex(selmon->sel))
 		return;
 	tag(arg);
 	view(arg);
@@ -2803,9 +2805,12 @@ tagandview(const Arg *arg)
 void
 tagmon(const Arg *arg)
 {
-	if (!selmon->sel || !mons->next)
+	Client *c = selmon->sel;
+
+	if (!c || !mons->next)
 		return;
-	sendmon(selmon->sel, dirtomon(arg->i));
+	sendmon(c, dirtomon(arg->i));
+	gotoclient(c);
 }
 
 /* tile() function is defined in vanitygaps.c (included in config.h) */
@@ -2898,7 +2903,7 @@ toggletag(const Arg *arg)
 {
 	unsigned int newtags;
 
-	if (!selmon->sel)
+	if (!selmon->sel || sharedtagappindex(selmon->sel))
 		return;
 	newtags = selmon->sel->tags ^ (arg->ui & TAGMASK);
 	if (newtags) {
