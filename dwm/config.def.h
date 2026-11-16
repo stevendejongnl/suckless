@@ -154,13 +154,13 @@ static const Layout layouts[] = {
 #define TAGKEYS(KEY,TAG) \
 	{ MODKEY,			    KEY,      view,	      {.ui = 1 << TAG} }, \
 	{ MODKEY | ControlMask,		    KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY | ShiftMask,		    KEY,      tag,	      {.ui = 1 << TAG} }, \
+	{ MODKEY | ShiftMask,		    KEY,      tagandview,	      {.ui = 1 << TAG} }, \
 	{ MODKEY | ControlMask | ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 /* one-handed alternative: Mod+Alt+1-4 reaches tags 5-8 */
 #define TAGKEYS_ALT(KEY,TAG) \
 	{ MODKEY | Mod1Mask,				KEY,      view,	      {.ui = 1 << TAG} }, \
 	{ MODKEY | Mod1Mask | ControlMask,		KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY | Mod1Mask | ShiftMask,		KEY,      tag,	      {.ui = 1 << TAG} }, \
+	{ MODKEY | Mod1Mask | ShiftMask,		KEY,      tagandview,	      {.ui = 1 << TAG} }, \
 	{ MODKEY | Mod1Mask | ControlMask | ShiftMask,	KEY,      toggletag,      {.ui = 1 << TAG} },
 
 #define XF86MonBrightnessDown 0x1008ff02

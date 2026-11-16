@@ -286,6 +286,7 @@ static void spawn(const Arg *arg);
 static Client *swallowingclient(Window w);
 static Monitor *systraytomon(Monitor *m);
 static void tag(const Arg *arg);
+static void tagandview(const Arg *arg);
 static void tagmon(const Arg *arg);
 static void tile(Monitor *m);
 static void togglebar(const Arg *arg);
@@ -2788,6 +2789,15 @@ tag(const Arg *arg)
 		focus(NULL);
 		arrange(selmon);
 	}
+}
+
+void
+tagandview(const Arg *arg)
+{
+	if (!selmon->sel)
+		return;
+	tag(arg);
+	view(arg);
 }
 
 void
